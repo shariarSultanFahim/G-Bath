@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Download, Share, X, PlusSquare } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -9,6 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PwaInstallPrompt() {
+  const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -31,7 +33,7 @@ export function PwaInstallPrompt() {
       if (daysSinceDismissed < 1) return; // Don't annoy user for 1 day
     }
 
-    // Detect mobile device
+    // Detect mobile device only (iOS / Android phones & tablets)
     const ua = window.navigator.userAgent;
     const ios = /iPhone|iPad|iPod/.test(ua) && !(window as any).MSStream;
     const mobile = /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
@@ -39,22 +41,22 @@ export function PwaInstallPrompt() {
     setIsIOS(ios);
     setIsMobile(mobile);
 
+    // Strictly DO NOT show prompt on Desktop browsers
+    if (!mobile) return;
+
     // On mobile devices, show prompt after a short delay
-    if (mobile) {
-      const timer = setTimeout(() => setShowPrompt(true), 1500);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => setShowPrompt(true), 1500);
 
     // Listen for Android / Chrome beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setShowPrompt(true);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     };
   }, []);
@@ -68,7 +70,6 @@ export function PwaInstallPrompt() {
       }
       setDeferredPrompt(null);
     } else {
-      // Fallback instruction if browser doesn't support native prompt trigger
       alert("To install G-Bath:\n\nTap your browser's menu (3 dots at top-right) and select 'Add to Home screen' or 'Install App'.");
     }
   };
@@ -78,7 +79,15 @@ export function PwaInstallPrompt() {
     localStorage.setItem("pwa_prompt_dismissed", Date.now().toString());
   };
 
-  if (!showPrompt || isStandalone) return null;
+  // Rule 1: Do NOT show on Admin pages or login pages (only show on Seller views)
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/login")) {
+    return null;
+  }
+
+  // Rule 2: Do NOT show on Desktop browsers or when already running in Standalone mode
+  if (!isMobile || !showPrompt || isStandalone) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-in slide-in-from-bottom duration-300">
@@ -86,7 +95,7 @@ export function PwaInstallPrompt() {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <img
-              src="/logo-512.png"
+              src="/logo.png"
               alt="G-Bath Logo"
               className="h-11 w-11 rounded-xl object-contain bg-white p-1 shadow-md border border-slate-700"
             />
