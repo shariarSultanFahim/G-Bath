@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SELLER
+}
+
+enum Status {
+  ACTIVE
+  SUSPENDED
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum AssessmentStatus {
+  DRAFT
+  SUBMITTED
+  PDF_READY
+}
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  email        String   @unique
+  passwordHash String
+  phone        String?
+  role         Role     @default(SELLER)
+  status       Status   @default(ACTIVE)
+  avatar       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdCustomers Customer[]
+  appointments     Appointment[]
+  assessments      Assessment[]
+}
+
+model Customer {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String
+  phone       String
+  address     String
+  createdById String   @db.ObjectId
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointments Appointment[]
+  assessments  Assessment[]
+}
+
+model Appointment {
+  id            String            @id @default(auto()) @map("_id") @db.ObjectId
+  customerId    String            @db.ObjectId
+  customer      Customer          @relation(fields: [customerId], references: [id])
+  salespersonId String            @db.ObjectId
+  salesperson   User              @relation(fields: [salespersonId], references: [id])
+  date          DateTime
+  time          String
+  notes         String?
+  status        AppointmentStatus @default(SCHEDULED)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  assessments Assessment[]
+}
+
+type ExistingBathroom {
+  bathSize          String?
+  showerSize        String?
+  wallMaterial      String?
+  flooringSquareFt String?
+  flooringMaterial  String?
+  measurements      String?
+  vanitySize        String?
+  notes             String?
+}
+
+type WetArea {
+  includeBath       Boolean @default(false)
+  bathDetails       String?
+  includeShower     Boolean @default(false)
+  showerDetails     String?
+  acrylicTilePanel  String?
+  notes             String?
+}
+
+type DryArea {
+  package         String?
+  vanityStyle     String?
+  vanityDetails   String?
+  packageUpgrades String[]
+  mirror          String?
+  vanityLighting  String?
+  upgradeLighting String?
+  towelBars       String?
+  comments        String?
+}
+
+type Upgrades {
+  glassDoor String?
+}
+
+model Assessment {
+  id            String            @id @default(auto()) @map("_id") @db.ObjectId
+  appointmentId String?           @db.ObjectId
+  appointment   Appointment?      @relation(fields: [appointmentId], references: [id])
+  customerId    String            @db.ObjectId
+  customer      Customer          @relation(fields: [customerId], references: [id])
+  salespersonId String            @db.ObjectId
+  salesperson   User              @relation(fields: [salespersonId], references: [id])
+  status        AssessmentStatus  @default(DRAFT)
+  pdfUrl        String?
+  photos        String[]
+  submittedAt   DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  existingBathroom ExistingBathroom?
+  wetArea          WetArea?
+  dryArea          DryArea?
+  upgrades         Upgrades?
+}
