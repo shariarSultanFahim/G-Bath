@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Search, Plus, UserX, UserCheck, Eye, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 
 import { CreateSalespersonModal } from "@/components/admin/create-salesperson-modal";
 import { ResetPasswordModal } from "@/components/admin/reset-password-modal";
+import { DataPagination } from "@/components/admin/data-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -22,24 +24,36 @@ interface Salesperson {
   phone: string;
   avatar?: string;
   status: "ACTIVE" | "SUSPENDED";
-  assessments?: any[];
+  assessments?: { id: string }[];
 }
 
 export default function AdminSalespersonsPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useQueryState("search", parseAsString.withDefault(""));
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
+  const [limit, setLimit] = useQueryState("limit", parseAsInteger.withDefault(10));
+
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [resetTarget, setResetTarget] = useState<Salesperson | null>(null);
 
   const queryClient = useQueryClient();
 
-  const { data: salespersons = [], isLoading } = useQuery<Salesperson[]>({
-    queryKey: ["admin-salespersons"],
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-salespersons", search, page, limit],
     queryFn: async () => {
-      const res = await fetch("/api/admin/salespersons");
+      const params = new URLSearchParams({
+        search,
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      const res = await fetch(`/api/admin/salespersons?${params}`);
       if (!res.ok) throw new Error("Failed to fetch salespersons");
       return res.json();
     },
   });
+
+  const salespersons: Salesperson[] = data?.data || [];
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, currentStatus }: { id: string; currentStatus: string }) => {
@@ -60,12 +74,6 @@ export default function AdminSalespersonsPage() {
       toast.error("Failed to update status");
     },
   });
-
-  const filtered = salespersons.filter(
-    (s) =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -88,8 +96,11 @@ export default function AdminSalespersonsPage() {
         <Input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, email..."
+          onChange={(e) => {
+            setSearch(e.target.value || null);
+            setPage(1);
+          }}
+          placeholder="Search by name, email, or phone..."
           className="pl-9 text-xs"
         />
       </div>
@@ -114,14 +125,14 @@ export default function AdminSalespersonsPage() {
                   <Skeleton className="h-10 w-full" />
                 </TableCell>
               </TableRow>
-            ) : filtered.length === 0 ? (
+            ) : salespersons.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
                   No salespersons found.
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((s) => (
+              salespersons.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium text-xs">
                     <div className="flex items-center gap-3">
@@ -180,6 +191,19 @@ export default function AdminSalespersonsPage() {
             )}
           </TableBody>
         </Table>
+
+        {/* Server Side Pagination */}
+        <DataPagination
+          page={page}
+          limit={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onLimitChange={(l) => {
+            setLimit(l);
+            setPage(1);
+          }}
+        />
       </div>
 
       <CreateSalespersonModal

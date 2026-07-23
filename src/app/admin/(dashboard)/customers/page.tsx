@@ -5,8 +5,10 @@ import Link from "next/link";
 import { Search, Plus, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
+import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 
 import { NewCustomerModal } from "@/components/modals/new-customer-modal";
+import { DataPagination } from "@/components/admin/data-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -20,21 +22,33 @@ interface Customer {
   email: string;
   address: string;
   createdAt: string;
-  assessments?: any[];
+  assessments?: { id: string; createdAt: string; status: string }[];
 }
 
 export default function AdminCustomersPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useQueryState("search", parseAsString.withDefault(""));
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
+  const [limit, setLimit] = useQueryState("limit", parseAsInteger.withDefault(10));
+
   const [isNewSheetOpen, setIsNewSheetOpen] = useState(false);
 
-  const { data: customers = [], isLoading, refetch } = useQuery<Customer[]>({
-    queryKey: ["admin-customers", search],
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["admin-customers", search, page, limit],
     queryFn: async () => {
-      const res = await fetch(`/api/customers?search=${encodeURIComponent(search)}`);
+      const params = new URLSearchParams({
+        search,
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      const res = await fetch(`/api/customers?${params}`);
       if (!res.ok) throw new Error("Failed to fetch customers");
       return res.json();
     },
   });
+
+  const customers: Customer[] = data?.data || [];
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
 
   return (
     <div className="flex flex-col gap-6">
@@ -57,7 +71,10 @@ export default function AdminCustomersPage() {
         <Input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value || null);
+            setPage(1);
+          }}
           placeholder="Search by name, phone, or address..."
           className="pl-9 text-xs"
         />
@@ -127,6 +144,19 @@ export default function AdminCustomersPage() {
             )}
           </TableBody>
         </Table>
+
+        {/* Server Side Pagination */}
+        <DataPagination
+          page={page}
+          limit={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onLimitChange={(l) => {
+            setLimit(l);
+            setPage(1);
+          }}
+        />
       </div>
 
       <NewCustomerModal

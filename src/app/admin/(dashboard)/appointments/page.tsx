@@ -6,14 +6,16 @@ import { format } from "date-fns";
 import { Search, Plus, Calendar, CheckCircle2, Clock, XCircle, MoreVertical, CalendarClock, Ban, FileText, Download } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 
 import { CreateAppointmentModal } from "@/components/admin/create-appointment-modal";
 import { RescheduleAppointmentModal } from "@/components/admin/reschedule-appointment-modal";
+import { DataPagination } from "@/components/admin/data-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -30,26 +32,39 @@ interface AppointmentItem {
   status: "SCHEDULED" | "COMPLETED" | "CANCELLED";
   notes?: string;
   customer: { id: string; name: string; phone: string };
-  salesperson: { id: string; name: string };
+  salesperson: { id: string; name: string; avatar?: string };
   assessments?: { id: string; pdfUrl?: string }[];
 }
 
 export default function AdminAppointmentsPage() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [search, setSearch] = useQueryState("search", parseAsString.withDefault(""));
+  const [statusFilter, setStatusFilter] = useQueryState("status", parseAsString.withDefault("ALL"));
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
+  const [limit, setLimit] = useQueryState("limit", parseAsInteger.withDefault(10));
+
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [rescheduleAppointment, setRescheduleAppointment] = useState<AppointmentItem | null>(null);
 
   const queryClient = useQueryClient();
 
-  const { data: appointments = [], isLoading, refetch } = useQuery<AppointmentItem[]>({
-    queryKey: ["admin-appointments"],
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["admin-appointments", search, statusFilter, page, limit],
     queryFn: async () => {
-      const res = await fetch("/api/appointments");
+      const params = new URLSearchParams({
+        search,
+        status: statusFilter,
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      const res = await fetch(`/api/appointments?${params}`);
       if (!res.ok) throw new Error("Failed to fetch appointments");
       return res.json();
     },
   });
+
+  const appointments: AppointmentItem[] = data?.data || [];
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -71,22 +86,9 @@ export default function AdminAppointmentsPage() {
     },
   });
 
-  const filteredAppointments = appointments.filter((appt) => {
-    const matchesSearch =
-      appt.customer.name.toLowerCase().includes(search.toLowerCase()) ||
-      appt.salesperson.name.toLowerCase().includes(search.toLowerCase()) ||
-      (appt.notes && appt.notes.toLowerCase().includes(search.toLowerCase()));
-
-    const matchesStatus =
-      statusFilter === "ALL" || appt.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div className="flex flex-col">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Appointments</h1>
           <p className="text-xs text-muted-foreground">
@@ -97,32 +99,37 @@ export default function AdminAppointmentsPage() {
           onClick={() => setIsCreateSheetOpen(true)}
           className="bg-[#E8621A] hover:bg-orange-600 text-white font-semibold text-xs"
         >
-          <Plus data-icon="inline-start" /> Create Appointment
+          <Plus data-icon="inline-start" /> New Appointment
         </Button>
       </div>
 
-      {/* Search & Status Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        {/* Search */}
-        <div className="relative max-w-md w-full">
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by customer name or seller name..."
+            onChange={(e) => {
+              setSearch(e.target.value || null);
+              setPage(1);
+            }}
+            placeholder="Search by customer, salesperson..."
             className="pl-9 text-xs"
           />
         </div>
 
-        {/* Status Filter Badges */}
-        <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl w-fit">
+        {/* Status Filter Pills */}
+        <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl border border-border/50">
           {["ALL", "SCHEDULED", "COMPLETED", "CANCELLED"].map((st) => (
             <Button
               key={st}
               variant="ghost"
               size="sm"
-              onClick={() => setStatusFilter(st)}
+              onClick={() => {
+                setStatusFilter(st === "ALL" ? null : st);
+                setPage(1);
+              }}
               className={`h-7 px-3 text-xs font-semibold rounded-lg transition-all ${statusFilter === st
                 ? "bg-background text-[#E8621A] shadow-sm font-bold"
                 : "text-muted-foreground hover:text-foreground"
@@ -143,25 +150,24 @@ export default function AdminAppointmentsPage() {
               <TableHead className="text-[10px]">SALESPERSON</TableHead>
               <TableHead className="text-[10px]">DATE & TIME</TableHead>
               <TableHead className="text-[10px]">STATUS</TableHead>
-              {/* <TableHead className="text-[10px]">NOTES</TableHead> */}
               <TableHead className="text-[10px] text-right">ACTIONS</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="p-4">
+                <TableCell colSpan={5} className="p-4">
                   <Skeleton className="h-10 w-full" />
                 </TableCell>
               </TableRow>
-            ) : filteredAppointments.length === 0 ? (
+            ) : appointments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
-                  No appointments found matching filters.
+                <TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-8">
+                  No appointments found.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAppointments.map((appt) => {
+              appointments.map((appt) => {
                 const pdfUrl = appt.assessments?.[0]?.pdfUrl;
 
                 return (
@@ -178,6 +184,7 @@ export default function AdminAppointmentsPage() {
                     <TableCell className="text-xs">
                       <div className="flex items-center gap-2">
                         <Avatar className="size-6 bg-orange-100 text-[#E8621A] font-bold text-[10px]">
+                          <AvatarImage src={appt.salesperson.avatar} />
                           <AvatarFallback>{appt.salesperson.name[0]}</AvatarFallback>
                         </Avatar>
                         <Link
@@ -208,16 +215,12 @@ export default function AdminAppointmentsPage() {
                         }
                         className="text-[10px]"
                       >
-                        {appt.status === "COMPLETED" && <CheckCircle2 data-icon="inline-start" />}
+                        {/* {appt.status === "COMPLETED" && <CheckCircle2 data-icon="inline-start" />}
                         {appt.status === "SCHEDULED" && <Clock data-icon="inline-start" />}
-                        {appt.status === "CANCELLED" && <XCircle data-icon="inline-start" />}
+                        {appt.status === "CANCELLED" && <XCircle data-icon="inline-start" />} */}
                         {appt.status}
                       </Badge>
                     </TableCell>
-
-                    {/* <TableCell className="text-xs text-muted-foreground max-w-xs truncate">
-                      {appt.notes || "—"}
-                    </TableCell> */}
 
                     {/* Actions Dropdown */}
                     <TableCell className="text-right">
@@ -229,7 +232,6 @@ export default function AdminAppointmentsPage() {
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent align="end" className="w-48">
-                          {/* Reschedule */}
                           <DropdownMenuItem
                             onClick={() => setRescheduleAppointment(appt)}
                             className="text-xs cursor-pointer"
@@ -238,7 +240,6 @@ export default function AdminAppointmentsPage() {
                             Reschedule Date
                           </DropdownMenuItem>
 
-                          {/* PDF Option */}
                           {pdfUrl ? (
                             <DropdownMenuItem asChild className="text-xs cursor-pointer">
                               <a href={pdfUrl} download>
@@ -255,7 +256,6 @@ export default function AdminAppointmentsPage() {
 
                           <DropdownMenuSeparator />
 
-                          {/* Cancel Appointment */}
                           <DropdownMenuItem
                             disabled={appt.status === "CANCELLED"}
                             onClick={() => cancelMutation.mutate(appt.id)}
@@ -273,6 +273,19 @@ export default function AdminAppointmentsPage() {
             )}
           </TableBody>
         </Table>
+
+        {/* Server Side Pagination */}
+        <DataPagination
+          page={page}
+          limit={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onLimitChange={(l) => {
+            setLimit(l);
+            setPage(1);
+          }}
+        />
       </div>
 
       <CreateAppointmentModal

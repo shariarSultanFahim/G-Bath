@@ -7,26 +7,45 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.max(1, parseInt(searchParams.get("limit") || "10", 10));
   const search = searchParams.get("search") || "";
 
-  const customers = await db.customer.findMany({
-    where: search
-      ? {
-          OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { phone: { contains: search, mode: "insensitive" } },
-            { email: { contains: search, mode: "insensitive" } },
-            { address: { contains: search, mode: "insensitive" } },
-          ],
-        }
-      : {},
-    orderBy: { createdAt: "desc" },
-    include: {
-      assessments: { select: { id: true, createdAt: true, status: true, pdfUrl: true } },
-    },
-  });
+  const skip = (page - 1) * limit;
 
-  return NextResponse.json(customers);
+  const whereCondition: any = search
+    ? {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { phone: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+          { address: { contains: search, mode: "insensitive" } },
+        ],
+      }
+    : {};
+
+  const [total, data] = await Promise.all([
+    db.customer.count({ where: whereCondition }),
+    db.customer.findMany({
+      where: whereCondition,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: {
+        assessments: { select: { id: true, createdAt: true, status: true, pdfUrl: true } },
+      },
+    }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return NextResponse.json({
+    data,
+    total,
+    page,
+    limit,
+    totalPages,
+  });
 }
 
 export async function POST(req: Request) {

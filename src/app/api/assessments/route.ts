@@ -7,17 +7,54 @@ export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const assessments = await db.assessment.findMany({
-    where: user.role === "SELLER" ? { salespersonId: user.id } : {},
-    orderBy: { createdAt: "desc" },
-    include: {
-      customer: true,
-      salesperson: { select: { id: true, name: true } },
-      appointment: true,
-    },
-  });
+  const { searchParams } = new URL(req.url);
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.max(1, parseInt(searchParams.get("limit") || "10", 10));
+  const search = searchParams.get("search") || "";
+  const status = searchParams.get("status") || "ALL";
 
-  return NextResponse.json(assessments);
+  const skip = (page - 1) * limit;
+
+  const whereCondition: any = {
+    ...(user.role === "SELLER" ? { salespersonId: user.id } : {}),
+  };
+
+  if (status && status !== "ALL") {
+    whereCondition.status = status;
+  }
+
+  if (search) {
+    whereCondition.OR = [
+      { customer: { name: { contains: search, mode: "insensitive" } } },
+      { customer: { phone: { contains: search, mode: "insensitive" } } },
+      { salesperson: { name: { contains: search, mode: "insensitive" } } },
+    ];
+  }
+
+  const [total, data] = await Promise.all([
+    db.assessment.count({ where: whereCondition }),
+    db.assessment.findMany({
+      where: whereCondition,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: {
+        customer: true,
+        salesperson: { select: { id: true, name: true, avatar: true } },
+        appointment: true,
+      },
+    }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return NextResponse.json({
+    data,
+    total,
+    page,
+    limit,
+    totalPages,
+  });
 }
 
 export async function POST(req: Request) {

@@ -7,17 +7,55 @@ export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const appointments = await db.appointment.findMany({
-    where: user.role === "SELLER" ? { salespersonId: user.id } : {},
-    orderBy: { date: "asc" },
-    include: {
-      customer: true,
-      salesperson: { select: { id: true, name: true } },
-      assessments: { select: { id: true, status: true, pdfUrl: true } },
-    },
-  });
+  const { searchParams } = new URL(req.url);
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.max(1, parseInt(searchParams.get("limit") || "10", 10));
+  const search = searchParams.get("search") || "";
+  const status = searchParams.get("status") || "ALL";
 
-  return NextResponse.json(appointments);
+  const skip = (page - 1) * limit;
+
+  const whereCondition: any = {
+    ...(user.role === "SELLER" ? { salespersonId: user.id } : {}),
+  };
+
+  if (status && status !== "ALL") {
+    whereCondition.status = status;
+  }
+
+  if (search) {
+    whereCondition.OR = [
+      { customer: { name: { contains: search, mode: "insensitive" } } },
+      { customer: { phone: { contains: search, mode: "insensitive" } } },
+      { salesperson: { name: { contains: search, mode: "insensitive" } } },
+      { notes: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  const [total, data] = await Promise.all([
+    db.appointment.count({ where: whereCondition }),
+    db.appointment.findMany({
+      where: whereCondition,
+      orderBy: { date: "desc" },
+      skip,
+      take: limit,
+      include: {
+        customer: true,
+        salesperson: { select: { id: true, name: true, avatar: true } },
+        assessments: { select: { id: true, status: true, pdfUrl: true } },
+      },
+    }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return NextResponse.json({
+    data,
+    total,
+    page,
+    limit,
+    totalPages,
+  });
 }
 
 export async function POST(req: Request) {

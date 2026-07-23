@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { format } from "date-fns";
-import { Eye, FileText } from "lucide-react";
+import { Eye, FileText, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 
+import { DataPagination } from "@/components/admin/data-pagination";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -22,14 +25,29 @@ interface AssessmentItem {
 }
 
 export default function AdminAssessmentsPage() {
-  const { data: assessments = [], isLoading } = useQuery<AssessmentItem[]>({
-    queryKey: ["admin-assessments"],
+  const [search, setSearch] = useQueryState("search", parseAsString.withDefault(""));
+  const [statusFilter, setStatusFilter] = useQueryState("status", parseAsString.withDefault("ALL"));
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
+  const [limit, setLimit] = useQueryState("limit", parseAsInteger.withDefault(10));
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-assessments", search, statusFilter, page, limit],
     queryFn: async () => {
-      const res = await fetch("/api/assessments");
+      const params = new URLSearchParams({
+        search,
+        status: statusFilter,
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      const res = await fetch(`/api/assessments?${params}`);
       if (!res.ok) throw new Error("Failed to fetch assessments");
       return res.json();
     },
   });
+
+  const assessments: AssessmentItem[] = data?.data || [];
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
 
   return (
     <div className="flex flex-col gap-6">
@@ -40,6 +58,45 @@ export default function AdminAssessmentsPage() {
         </div>
       </div>
 
+      {/* Search and Status Filters */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value || null);
+              setPage(1);
+            }}
+            placeholder="Search by customer, salesperson..."
+            className="pl-9 text-xs"
+          />
+        </div>
+
+        {/* Status Filter Pills */}
+        <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl border border-border/50">
+          {["ALL", "SUBMITTED"].map((st) => (
+            <Button
+              key={st}
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setStatusFilter(st === "ALL" ? null : st);
+                setPage(1);
+              }}
+              className={`h-7 px-3 text-xs font-semibold rounded-lg transition-all ${statusFilter === st
+                ? "bg-background text-[#E8621A] shadow-sm font-bold"
+                : "text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              {st === "ALL" ? "All" : st.replace("_", " ")}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Assessments Table */}
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/50">
@@ -114,6 +171,19 @@ export default function AdminAssessmentsPage() {
             )}
           </TableBody>
         </Table>
+
+        {/* Server Side Pagination */}
+        <DataPagination
+          page={page}
+          limit={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onLimitChange={(l) => {
+            setLimit(l);
+            setPage(1);
+          }}
+        />
       </div>
     </div>
   );

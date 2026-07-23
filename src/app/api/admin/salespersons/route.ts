@@ -9,15 +9,47 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized: Admin only" }, { status: 403 });
   }
 
-  const salespersons = await db.user.findMany({
-    where: { role: "SELLER" },
-    orderBy: { createdAt: "desc" },
-    include: {
-      assessments: { select: { id: true } },
-    },
-  });
+  const { searchParams } = new URL(req.url);
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.max(1, parseInt(searchParams.get("limit") || "10", 10));
+  const search = searchParams.get("search") || "";
 
-  return NextResponse.json(salespersons);
+  const skip = (page - 1) * limit;
+
+  const whereCondition: any = {
+    role: "SELLER",
+  };
+
+  if (search) {
+    whereCondition.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { email: { contains: search, mode: "insensitive" } },
+      { phone: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  const [total, data] = await Promise.all([
+    db.user.count({ where: whereCondition }),
+    db.user.findMany({
+      where: whereCondition,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: {
+        assessments: { select: { id: true } },
+      },
+    }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return NextResponse.json({
+    data,
+    total,
+    page,
+    limit,
+    totalPages,
+  });
 }
 
 export async function POST(req: Request) {

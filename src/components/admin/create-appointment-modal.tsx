@@ -34,10 +34,10 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
   const queryClient = useQueryClient();
 
   // Fetch Customers for Searchable Combobox
-  const { data: customers = [], isLoading: loadingCustomers } = useQuery({
+  const { data: customersData, isLoading: loadingCustomers } = useQuery({
     queryKey: ["admin-customers-all"],
     queryFn: async () => {
-      const res = await fetch("/api/customers");
+      const res = await fetch("/api/customers?limit=100");
       if (!res.ok) throw new Error("Failed to fetch customers");
       return res.json();
     },
@@ -45,23 +45,37 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
   });
 
   // Fetch Salespersons for Searchable Combobox
-  const { data: salespersons = [], isLoading: loadingSalespersons } = useQuery({
+  const { data: salespersonsData, isLoading: loadingSalespersons } = useQuery({
     queryKey: ["admin-salespersons-all"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/salespersons");
+      const res = await fetch("/api/admin/salespersons?limit=100");
       if (!res.ok) throw new Error("Failed to fetch salespersons");
       return res.json();
     },
     enabled: isOpen,
   });
 
-  const customerOptions = (customers as Array<{ id: string; name: string; phone: string; address?: string }>).map((c) => ({
+  const customersList: Array<{ id: string; name: string; phone: string; address?: string }> =
+    Array.isArray(customersData)
+      ? customersData
+      : Array.isArray(customersData?.data)
+      ? customersData.data
+      : [];
+
+  const salespersonsList: Array<{ id: string; name: string; email: string; status: string }> =
+    Array.isArray(salespersonsData)
+      ? salespersonsData
+      : Array.isArray(salespersonsData?.data)
+      ? salespersonsData.data
+      : [];
+
+  const customerOptions = customersList.map((c) => ({
     id: c.id,
     label: c.name,
     sublabel: `${c.phone}${c.address ? ` · ${c.address}` : ""}`,
   }));
 
-  const salespersonOptions = (salespersons as Array<{ id: string; name: string; email: string; status: string }>)
+  const salespersonOptions = salespersonsList
     .filter((s) => s.status === "ACTIVE")
     .map((s) => ({
       id: s.id,
@@ -185,18 +199,6 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
                   placeholder="e.g. 10:00 AM"
                 />
               </Field>
-
-              {/* Notes */}
-              {/* <Field>
-                <FieldLabel htmlFor="appt-notes">Notes (Optional)</FieldLabel>
-                <Input
-                  id="appt-notes"
-                  type="text"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. Full master bathroom renovation"
-                />
-              </Field> */}
             </FieldGroup>
           </form>
         </div>

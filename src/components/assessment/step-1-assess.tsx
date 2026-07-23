@@ -49,10 +49,15 @@ export function Step1Assess({
   const [isChanging, setIsChanging] = useState(false);
 
   useEffect(() => {
-    fetch("/api/customers")
+    fetch("/api/customers?limit=100")
       .then((res) => res.json())
-      .then((list) => {
-        if (Array.isArray(list)) setCustomers(list);
+      .then((resData) => {
+        const list = Array.isArray(resData)
+          ? resData
+          : Array.isArray(resData?.data)
+          ? resData.data
+          : [];
+        setCustomers(list);
       })
       .catch(console.error);
   }, []);
