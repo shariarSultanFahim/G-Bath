@@ -31,8 +31,16 @@ export async function GET() {
   const pdfReadyCount = assessments.filter((a) => a.pdfUrl !== null).length;
   const newAssessmentsCount = assessments.filter((a) => a.status === "SUBMITTED").length;
 
-  // Filter Today's Appointments list to only SCHEDULED appointments
-  const scheduledAppointments = allAppointments.filter((a) => a.status === "SCHEDULED");
+  // Filter strictly for Today's Appointments
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const todaysAppointments = allAppointments.filter((a) => {
+    const apptDate = new Date(a.date);
+    return apptDate >= todayStart && apptDate <= todayEnd;
+  });
 
   return NextResponse.json({
     stats: {
@@ -41,7 +49,7 @@ export async function GET() {
       pdfReadyCount,
       newAssessmentsCount,
     },
-    appointments: scheduledAppointments,
+    appointments: todaysAppointments,
     assessments,
   });
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -43,13 +44,20 @@ export default function SellerLoginPage() {
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1200&q=80')`,
       }}
     >
-      <div className="w-full max-w-sm rounded-3xl border border-white/20 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-xl">
-        <div className="mb-6 text-center">
+      <div className="glass-card w-full max-w-sm rounded-3xl border border-white/20 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <Image
+            src="/logo-512.png"
+            alt="Good Bathroom Renos Logo"
+            width={64}
+            height={64}
+            className="mb-3 h-16 w-16 object-contain rounded-2xl shadow-lg bg-white/10 p-2 border border-white/20 backdrop-blur-md"
+          />
           <h1 className="text-3xl font-extrabold tracking-tight text-white">Good</h1>
           <p className="mt-0.5 text-xs font-semibold uppercase tracking-widest text-slate-300">
             Bathroom Renos
           </p>
-          <h2 className="mt-6 text-lg font-medium text-white">Sign In</h2>
+          {/* <h2 className="mt-4 text-base font-medium text-white/90">Sign In</h2> */}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

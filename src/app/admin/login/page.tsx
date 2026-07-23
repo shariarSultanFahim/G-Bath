@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -39,7 +40,14 @@ export default function AdminLoginPage() {
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-slate-100 px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-slate-200">
-        <div className="mb-6 text-center">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <Image
+            src="/logo-512.png"
+            alt="Good Bathroom Renos Logo"
+            width={64}
+            height={64}
+            className="mb-3 h-16 w-16 object-contain rounded-2xl shadow-sm border border-slate-100 bg-slate-50 p-2"
+          />
           <h1 className="text-3xl font-bold text-[#E8621A]">Good</h1>
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1">
             Admin Dashboard

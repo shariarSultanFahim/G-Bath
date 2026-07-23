@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { format } from "date-fns";
-import { Eye, CalendarDays, CheckCircle2, FileText, Sparkles, RefreshCw } from "lucide-react";
+import { Eye, CalendarDays, CheckCircle2, FileText, Sparkles, RefreshCw, Pen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,7 +62,7 @@ export default function AdminDashboardPage() {
     pdfReadyCount: 0,
     newAssessmentsCount: 0,
   };
-  const appointments: AppointmentItem[] = (data?.appointments || []).filter((a: AppointmentItem) => a.status === "SCHEDULED");
+  const appointments: AppointmentItem[] = data?.appointments || [];
   const assessments: AssessmentItem[] = (data?.assessments || []).slice(0, 3);
 
   return (
@@ -140,7 +140,7 @@ export default function AdminDashboardPage() {
         <Card className="border-amber-200 bg-amber-50/50 shadow-none">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-semibold text-muted-foreground">New Assessments</CardTitle>
-            <Sparkles className="size-4 text-amber-600" />
+            <Pen className="size-4 text-amber-600" />
           </CardHeader>
           <CardContent>
             {isLoading ? (
