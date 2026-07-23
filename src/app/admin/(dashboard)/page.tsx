@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface CustomerInfo {
@@ -21,6 +21,7 @@ interface CustomerInfo {
 interface SalespersonInfo {
   id: string;
   name: string;
+  avatar?: string;
 }
 
 interface AppointmentItem {
@@ -62,7 +63,7 @@ export default function AdminDashboardPage() {
     newAssessmentsCount: 0,
   };
   const appointments: AppointmentItem[] = (data?.appointments || []).filter((a: AppointmentItem) => a.status === "SCHEDULED");
-  const assessments: AssessmentItem[] = data?.assessments || [];
+  const assessments: AssessmentItem[] = (data?.assessments || []).slice(0, 3);
 
   return (
     <div className="flex flex-col gap-8">
@@ -152,103 +153,136 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Today's Appointments */}
-      <div className="flex flex-col gap-4">
-        <div>
-          <h2 className="text-lg font-bold text-foreground">Today's Appointments</h2>
-          <p className="text-xs text-muted-foreground">{appointments.length} appointments scheduled</p>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          {isLoading ? (
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-            </div>
-          ) : appointments.length === 0 ? (
-            <Card className="p-8 text-center text-xs text-muted-foreground">
-              No appointments scheduled for today.
-            </Card>
-          ) : (
-            appointments.map((appt: AppointmentItem) => (
-              <Card key={appt.id} className="p-4 shadow-sm hover:shadow-md transition-all">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-center justify-center rounded-xl bg-orange-100/70 size-14 shrink-0">
-                      <span className="text-base font-extrabold text-[#E8621A]">
-                        {appt.time.split(" ")[0]}
-                      </span>
-                      <span className="text-[10px] font-bold uppercase text-orange-600">
-                        {appt.time.split(" ")[1] || "AM"}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <h3 className="font-bold text-foreground text-sm">{appt.customer.name}</h3>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Avatar className="size-4 bg-muted text-[9px] font-bold">
-                          <AvatarFallback>{appt.salesperson.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <span>{appt.salesperson.name}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <Badge variant="brand">{appt.status}</Badge>
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* New Assessments */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+      {/* Side-by-Side View: Today's Appointments & New Assessments */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* Left Column: Today's Appointments */}
+        <div className="flex flex-col gap-4">
           <div>
-            <h2 className="text-lg font-bold text-foreground">New Assessments</h2>
-            <p className="text-xs text-muted-foreground">Submitted by salespersons for review</p>
+            <h2 className="text-lg font-bold text-foreground">Today's Appointments</h2>
+            <p className="text-xs text-muted-foreground">{appointments.length} appointments scheduled</p>
           </div>
-          <Button asChild variant="link" size="sm" className="text-xs text-[#E8621A]">
-            <Link href="/admin/assessments">View all ›</Link>
-          </Button>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {isLoading ? (
-            <>
-              <Skeleton className="h-32 w-full" />
-              <Skeleton className="h-32 w-full" />
-              <Skeleton className="h-32 w-full" />
-            </>
-          ) : assessments.length === 0 ? (
-            <Card className="col-span-3 p-8 text-center text-xs text-muted-foreground">
-              No recent assessments.
-            </Card>
-          ) : (
-            assessments.slice(0, 3).map((ass: AssessmentItem) => (
-              <Card key={ass.id} className="flex flex-col justify-between p-5 border-2 border-primary/20">
-                <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
+            {isLoading ? (
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : appointments.length === 0 ? (
+              <Card className="p-8 text-center text-xs text-muted-foreground">
+                No appointments scheduled for today.
+              </Card>
+            ) : (
+              appointments.map((appt: AppointmentItem) => (
+                <Card key={appt.id} className="p-4 shadow-sm hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-9 bg-muted text-xs font-bold">
-                        <AvatarFallback>{ass.salesperson.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <h4 className="font-bold text-foreground text-sm">{ass.customer.name}</h4>
-                        <span className="text-xs text-muted-foreground">{ass.salesperson.name}</span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex flex-col items-center justify-center rounded-xl bg-orange-100/70 size-14 shrink-0">
+                        <span className="text-base font-extrabold text-[#E8621A]">
+                          {appt.time.split(" ")[0]}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase text-orange-600">
+                          {appt.time.split(" ")[1] || "AM"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <h3 className="font-bold text-foreground text-sm">{appt.customer.name}</h3>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Avatar className="size-5 bg-orange-100 text-[#E8621A] font-bold text-[10px]">
+                            {appt.salesperson?.avatar && (
+                              <AvatarImage src={appt.salesperson.avatar} alt={appt.salesperson.name} />
+                            )}
+                            <AvatarFallback>{appt.salesperson?.name?.[0] || "S"}</AvatarFallback>
+                          </Avatar>
+                          <span>{appt.salesperson?.name}</span>
+                        </div>
                       </div>
                     </div>
-                    <Badge variant="success">PDF Ready</Badge>
+                    <Badge variant="brand">{appt.status}</Badge>
                   </div>
-                </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
 
-                <Button asChild variant="outline" size="sm" className="mt-4 w-full text-xs text-[#E8621A] border-orange-200 hover:bg-orange-50">
-                  <Link href={`/admin/assessments/${ass.id}`}>
-                    <Eye data-icon="inline-start" /> View Assessment
-                  </Link>
-                </Button>
+        {/* Right Column: New Assessments (Latest 3) */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">New Assessments</h2>
+              <p className="text-xs text-muted-foreground">Latest 3 submitted reports</p>
+            </div>
+            <Button asChild variant="link" size="sm" className="text-xs text-[#E8621A]">
+              <Link href="/admin/assessments">View all ›</Link>
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {isLoading ? (
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+            ) : assessments.length === 0 ? (
+              <Card className="p-8 text-center text-xs text-muted-foreground">
+                No recent assessments.
               </Card>
-            ))
-          )}
+            ) : (
+              assessments.map((ass: AssessmentItem) => (
+                <Card
+                  key={ass.id}
+                  className="p-4 shadow-sm hover:shadow-md transition-all border border-border/80 bg-card flex flex-col gap-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 items-center justify-center rounded-xl bg-orange-50 text-[#E8621A] shrink-0 border border-orange-100">
+                        <FileText className="size-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <h4 className="font-bold text-foreground text-sm leading-tight">
+                          {ass.customer?.name || "Client Assessment"}
+                        </h4>
+                        <span className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+                          #{ass.id.slice(-6).toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Badge variant={ass.pdfUrl ? "success" : "brand"} className="text-[10px] shrink-0">
+                      {ass.pdfUrl ? "PDF Ready" : ass.status}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2.5 border-t border-border/50 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="size-5 bg-orange-100 text-[#E8621A] font-bold text-[9px]">
+                        {ass.salesperson?.avatar && (
+                          <AvatarImage src={ass.salesperson.avatar} alt={ass.salesperson.name} />
+                        )}
+                        <AvatarFallback>{ass.salesperson?.name?.[0] || "S"}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-muted-foreground text-[11px]">
+                        By <strong className="text-foreground font-semibold">{ass.salesperson?.name}</strong>
+                      </span>
+                    </div>
+
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2.5 text-xs text-[#E8621A] hover:text-orange-700 hover:bg-orange-50 font-semibold"
+                    >
+                      <Link href={`/admin/assessments/${ass.id}`}>
+                        <Eye data-icon="inline-start" className="size-3.5" /> View Report
+                      </Link>
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -12,16 +12,17 @@ export async function GET() {
     orderBy: { date: "asc" },
     include: {
       customer: true,
-      salesperson: { select: { id: true, name: true } },
+      salesperson: { select: { id: true, name: true, avatar: true } },
       assessments: true,
     },
   });
 
   const assessments = await db.assessment.findMany({
     orderBy: { createdAt: "desc" },
+    take: 3,
     include: {
       customer: true,
-      salesperson: { select: { id: true, name: true } },
+      salesperson: { select: { id: true, name: true, avatar: true } },
     },
   });
 
