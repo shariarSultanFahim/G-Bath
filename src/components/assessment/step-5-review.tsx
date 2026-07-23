@@ -16,9 +16,8 @@ interface Props {
   onGoToStep: (step: number) => void;
   onPrev: () => void;
   onSubmit: () => Promise<void>;
-  assessmentId?: string;
+  onGeneratePdf: () => Promise<void>;
   pdfUrl?: string;
-  setPdfUrl: (url: string) => void;
 }
 
 export function Step5Review({
@@ -29,30 +28,16 @@ export function Step5Review({
   onGoToStep,
   onPrev,
   onSubmit,
-  assessmentId,
+  onGeneratePdf,
   pdfUrl,
-  setPdfUrl,
 }: Props) {
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleGeneratePdf = async () => {
-    if (!assessmentId) {
-      toast.error("Please save draft assessment first");
-      return;
-    }
     setGeneratingPdf(true);
     try {
-      const res = await fetch(`/api/assessments/${assessmentId}/pdf`, { method: "POST" });
-      if (res.ok) {
-        const { pdfUrl } = await res.json();
-        setPdfUrl(pdfUrl);
-        toast.success("PDF Generated successfully!");
-      } else {
-        toast.error("PDF generation failed");
-      }
-    } catch {
-      toast.error("An error occurred");
+      await onGeneratePdf();
     } finally {
       setGeneratingPdf(false);
     }
@@ -147,7 +132,7 @@ export function Step5Review({
         ) : (
           <button
             onClick={handleGeneratePdf}
-            disabled={generatingPdf}
+            disabled={generatingPdf || submitting}
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#E8621A] py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/20 active:scale-[0.98] disabled:opacity-50"
           >
             <FileText className="h-4 w-4" /> {generatingPdf ? "Generating PDF..." : "Generate PDF"}
@@ -156,7 +141,7 @@ export function Step5Review({
 
         <button
           onClick={handleSubmitAssessment}
-          disabled={submitting}
+          disabled={submitting || generatingPdf}
           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 active:scale-[0.98] disabled:opacity-50"
         >
           <CheckCircle2 className="h-4 w-4" /> {submitting ? "Submitting..." : "Submit Assessment"}

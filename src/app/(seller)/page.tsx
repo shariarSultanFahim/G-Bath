@@ -2,7 +2,8 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth-utils";
 import { db } from "@/lib/db";
 import { format } from "date-fns";
-import { AlertCircle, Eye, Share2, ArrowRight } from "lucide-react";
+import { AlertCircle, Eye, ArrowRight } from "lucide-react";
+import { SharePdfButton } from "@/components/seller/share-pdf-button";
 
 export default async function SellerHomePage() {
   const user = await getCurrentUser();
@@ -12,7 +13,10 @@ export default async function SellerHomePage() {
   today.setHours(0, 0, 0, 0);
 
   const appointments = await db.appointment.findMany({
-    where: { salespersonId: user.id },
+    where: {
+      salespersonId: user.id,
+      status: "SCHEDULED",
+    },
     orderBy: { date: "asc" },
     include: {
       customer: true,
@@ -143,16 +147,7 @@ export default async function SellerHomePage() {
                     <Eye className="h-4 w-4" />
                   </a>
                 )}
-                <button
-                  onClick={() => {
-                    if (navigator.share && ass.pdfUrl) {
-                      navigator.share({ title: `Assessment PDF`, url: window.location.origin + ass.pdfUrl });
-                    }
-                  }}
-                  className="p-2 text-slate-400 hover:text-slate-700"
-                >
-                  <Share2 className="h-4 w-4" />
-                </button>
+                <SharePdfButton pdfUrl={ass.pdfUrl} customerName={ass.customer.name} />
               </div>
             </div>
           ))

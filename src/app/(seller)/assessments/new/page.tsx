@@ -92,65 +92,99 @@ export default function NewAssessmentPage() {
     if (name) setCustomerName(name);
   };
 
-  // Save or update draft on moving forward
-  const saveDraft = async () => {
-    try {
-      const payload = {
-        appointmentId: appointmentId || null,
-        customerId,
-        existingBathroom: step1,
-        wetArea: step2,
-        dryArea: step3,
-        upgrades: step4,
-        photos: step1.photos,
-      };
-
-      if (!assessmentId) {
-        const res = await fetch("/api/assessments", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          const created = await res.json();
-          setAssessmentId(created.id);
-        }
-      } else {
-        await fetch(`/api/assessments/${assessmentId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-    } catch (e) {
-      console.error("Save draft error:", e);
-    }
-  };
-
-  const handleNextStep = async () => {
+  // Only advance step counter during step 1-4 without calling API
+  const handleNextStep = () => {
     if (!customerId) {
       toast.error("Please select a customer first");
       return;
     }
-    await saveDraft();
     setCurrentStep((prev) => Math.min(prev + 1, 5));
   };
 
-  const handleFinalSubmit = async () => {
-    if (!assessmentId) {
-      toast.error("Assessment ID missing");
-      return;
+  // Generate PDF or Save Assessment with all 5 steps payload
+  const createFullAssessment = async () => {
+    if (!customerId) {
+      toast.error("Customer missing");
+      return null;
     }
-    try {
-      const res = await fetch(`/api/assessments/${assessmentId}/submit`, { method: "POST" });
+
+    const payload = {
+      appointmentId: appointmentId || null,
+      customerId,
+      existingBathroom: step1,
+      wetArea: step2,
+      dryArea: step3,
+      upgrades: step4,
+      photos: step1.photos,
+    };
+
+    if (!assessmentId) {
+      const res = await fetch("/api/assessments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       if (res.ok) {
-        toast.success("Assessment submitted to Admin!");
+        const created = await res.json();
+        setAssessmentId(created.id);
+        return created.id;
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to create assessment");
+        return null;
+      }
+    } else {
+      await fetch(`/api/assessments/${assessmentId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return assessmentId;
+    }
+  };
+
+  const handleGeneratePdf = async () => {
+    const id = await createFullAssessment();
+    if (!id) return;
+
+    try {
+      const res = await fetch(`/api/assessments/${id}/pdf`, { method: "POST" });
+      if (res.ok) {
+        const { pdfUrl } = await res.json();
+        setPdfUrl(pdfUrl);
+        toast.success("PDF Generated successfully!");
+      } else {
+        toast.error("PDF generation failed");
+      }
+    } catch {
+      toast.error("An error occurred generating PDF");
+    }
+  };
+
+  const handleFinalSubmit = async () => {
+    const id = await createFullAssessment();
+    if (!id) return;
+
+    try {
+      // Generate PDF first if not already generated
+      if (!pdfUrl) {
+        const pdfRes = await fetch(`/api/assessments/${id}/pdf`, { method: "POST" });
+        if (pdfRes.ok) {
+          const pdfData = await pdfRes.json();
+          setPdfUrl(pdfData.pdfUrl);
+        }
+      }
+
+      // Submit assessment
+      const res = await fetch(`/api/assessments/${id}/submit`, { method: "POST" });
+      if (res.ok) {
+        toast.success("Assessment submitted successfully!");
         router.push("/assessments");
       } else {
         toast.error("Submission failed");
       }
     } catch {
-      toast.error("An error occurred");
+      toast.error("An error occurred submitting assessment");
     }
   };
 
@@ -235,9 +269,8 @@ export default function NewAssessmentPage() {
           onGoToStep={(s) => setCurrentStep(s)}
           onPrev={() => setCurrentStep(4)}
           onSubmit={handleFinalSubmit}
-          assessmentId={assessmentId}
+          onGeneratePdf={handleGeneratePdf}
           pdfUrl={pdfUrl}
-          setPdfUrl={setPdfUrl}
         />
       )}
     </div>
