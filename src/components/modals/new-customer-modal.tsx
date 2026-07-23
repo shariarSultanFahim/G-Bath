@@ -1,8 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
 import { toast } from "sonner";
+
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
 
 interface Props {
   isOpen: boolean;
@@ -16,8 +27,6 @@ export function NewCustomerModal({ isOpen, onClose, onSuccess }: Props) {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,88 +59,79 @@ export function NewCustomerModal({ isOpen, onClose, onSuccess }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-      <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="font-bold text-slate-900 text-lg">New Customer</h3>
-          <button onClick={onClose} className="rounded-full p-1 text-slate-400 hover:text-slate-600">
-            <X className="h-5 w-5" />
-          </button>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col justify-between">
+        <div>
+          <SheetHeader className="pb-4 border-b border-border">
+            <SheetTitle>New Customer</SheetTitle>
+            <SheetDescription>
+              Enter client contact details to register a new bathroom renovation customer.
+            </SheetDescription>
+          </SheetHeader>
+
+          <form id="new-customer-form" onSubmit={handleSubmit} className="py-6">
+            <FieldGroup className="flex flex-col gap-4">
+              <Field>
+                <FieldLabel htmlFor="cust-name">Full Name</FieldLabel>
+                <Input
+                  id="cust-name"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Damon"
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="cust-email">Email</FieldLabel>
+                <Input
+                  id="cust-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="damon@gmail.com"
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="cust-phone">Phone Number</FieldLabel>
+                <Input
+                  id="cust-phone"
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="0142835945"
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="cust-address">Address</FieldLabel>
+                <Input
+                  id="cust-address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="14 Harbour View, Auckland"
+                />
+              </Field>
+            </FieldGroup>
+          </form>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3.5">
-          <div>
-            <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              Full Name
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Damon"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="damon@gmail.com"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              Phone
-            </label>
-            <input
-              type="tel"
-              required
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="0142835945"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              Address
-            </label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="14 Harbour View, Auckland"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 rounded-xl bg-[#E8621A] py-2.5 text-sm font-semibold text-white shadow-md hover:bg-orange-600 active:scale-[0.98] disabled:opacity-50"
-            >
-              {loading ? "Saving..." : "Save"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <SheetFooter className="pt-4 border-t border-border flex gap-2">
+          <Button variant="outline" type="button" onClick={onClose} className="flex-1">
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="new-customer-form"
+            disabled={loading}
+            className="flex-1 bg-[#E8621A] hover:bg-orange-600 text-white font-semibold"
+          >
+            {loading ? "Saving..." : "Save Customer"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

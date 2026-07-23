@@ -1,6 +1,16 @@
 "use client";
 
-import { X, Download, Share2 } from "lucide-react";
+import { Download, Share2 } from "lucide-react";
+
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   pdfUrl: string | null;
@@ -9,48 +19,47 @@ interface Props {
 }
 
 export function PdfPreviewModal({ pdfUrl, isOpen, onClose }: Props) {
-  if (!isOpen || !pdfUrl) return null;
+  if (!pdfUrl) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="font-bold text-slate-900 text-lg">PDF Preview</h3>
-          <button onClick={onClose} className="rounded-full p-1 text-slate-400 hover:text-slate-600">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-4xl flex flex-col justify-between">
+        <SheetHeader className="pb-3 border-b border-border">
+          <SheetTitle>PDF Assessment Preview</SheetTitle>
+          <SheetDescription>
+            Interactive view of the generated bathroom assessment report.
+          </SheetDescription>
+        </SheetHeader>
 
-        <div className="flex-1 min-h-[500px] w-full rounded-2xl bg-slate-100 overflow-hidden border border-slate-200">
+        <div className="flex-1 my-4 w-full rounded-xl bg-muted overflow-hidden border border-border min-h-[550px]">
           <iframe src={pdfUrl} className="h-full w-full border-none" title="PDF Preview" />
         </div>
 
-        <div className="flex justify-end gap-3 pt-2">
-          <a
-            href={pdfUrl}
-            download
-            className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
-          >
-            <Download className="h-4 w-4" /> Download
-          </a>
-          <button
+        <SheetFooter className="pt-3 border-t border-border flex justify-end gap-2">
+          <Button asChild variant="outline" size="sm">
+            <a href={pdfUrl} download>
+              <Download data-icon="inline-start" /> Download PDF
+            </a>
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => {
               if (navigator.share) {
                 navigator.share({ title: "Assessment PDF", url: window.location.origin + pdfUrl });
               }
             }}
-            className="flex items-center gap-2 rounded-xl bg-orange-100 px-4 py-2.5 text-xs font-bold text-[#E8621A] hover:bg-orange-200"
+            className="bg-orange-100 text-[#E8621A] hover:bg-orange-200"
           >
-            <Share2 className="h-4 w-4" /> Share
-          </button>
-          <button
-            onClick={onClose}
-            className="rounded-xl bg-slate-800 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-900"
-          >
+            <Share2 data-icon="inline-start" /> Share
+          </Button>
+
+          <Button variant="default" size="sm" onClick={onClose}>
             Close
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

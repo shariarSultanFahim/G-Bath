@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Search, Plus, UserX, UserCheck } from "lucide-react";
-import { CreateSalespersonModal } from "@/components/admin/create-salesperson-modal";
 import { toast } from "sonner";
+
+import { CreateSalespersonModal } from "@/components/admin/create-salesperson-modal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface Salesperson {
   id: string;
@@ -17,7 +23,7 @@ interface Salesperson {
 export default function AdminSalespersonsPage() {
   const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
   const [search, setSearch] = useState("");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
 
   const fetchSalespersons = async () => {
     try {
@@ -59,91 +65,92 @@ export default function AdminSalespersonsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Salespersons</h1>
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-1.5 rounded-xl bg-[#E8621A] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-orange-600 active:scale-95"
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Salespersons</h1>
+          <p className="text-xs text-muted-foreground">Manage sales team accounts and status.</p>
+        </div>
+        <Button
+          onClick={() => setIsCreateSheetOpen(true)}
+          className="bg-[#E8621A] hover:bg-orange-600 text-white font-semibold text-xs"
         >
-          <Plus className="h-4 w-4" /> Create Salesperson
-        </button>
+          <Plus data-icon="inline-start" /> Create Salesperson
+        </Button>
       </div>
 
       {/* Search */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, email..."
-          className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs text-slate-900 focus:border-[#E8621A] focus:outline-none"
+          className="pl-9 text-xs"
         />
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
-            <tr>
-              <th className="p-4">NAME</th>
-              <th className="p-4">EMAIL</th>
-              <th className="p-4">PHONE</th>
-              <th className="p-4">STATUS</th>
-              <th className="p-4">TOTAL ASSESSMENTS</th>
-              <th className="p-4 text-right">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead className="text-[10px]">NAME</TableHead>
+              <TableHead className="text-[10px]">EMAIL</TableHead>
+              <TableHead className="text-[10px]">PHONE</TableHead>
+              <TableHead className="text-[10px]">STATUS</TableHead>
+              <TableHead className="text-[10px]">TOTAL ASSESSMENTS</TableHead>
+              <TableHead className="text-[10px] text-right">ACTIONS</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="p-6 text-center text-slate-400">
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
                   No salespersons found.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               filtered.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50 transition">
-                  <td className="p-4 flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-sm font-bold text-[#E8621A]">
-                      {s.name[0]}
+                <TableRow key={s.id}>
+                  <TableCell className="font-medium text-xs">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="size-8 bg-orange-100 text-[#E8621A] font-bold text-xs">
+                        <AvatarFallback>{s.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-bold text-foreground">{s.name}</span>
                     </div>
-                    <span className="font-bold text-slate-900">{s.name}</span>
-                  </td>
-                  <td className="p-4 font-medium text-slate-700">{s.email}</td>
-                  <td className="p-4 text-slate-600">{s.phone || "—"}</td>
-                  <td className="p-4">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                        s.status === "ACTIVE"
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-rose-50 text-rose-600"
-                      }`}
-                    >
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{s.email}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{s.phone || "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={s.status === "ACTIVE" ? "success" : "destructive"}>
                       {s.status}
-                    </span>
-                  </td>
-                  <td className="p-4 font-bold text-slate-900">{s.assessments?.length || 0}</td>
-                  <td className="p-4 text-right">
-                    <button
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-bold text-xs">{s.assessments?.length || 0}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => toggleStatus(s.id, s.status)}
                       title={s.status === "ACTIVE" ? "Suspend" : "Activate"}
-                      className="p-1.5 text-slate-400 hover:text-rose-600"
+                      className="size-8 text-muted-foreground hover:text-rose-600"
                     >
-                      {s.status === "ACTIVE" ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                    </button>
-                  </td>
-                </tr>
+                      {s.status === "ACTIVE" ? <UserX className="size-4" /> : <UserCheck className="size-4" />}
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       <CreateSalespersonModal
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
+        isOpen={isCreateSheetOpen}
+        onClose={() => setIsCreateSheetOpen(false)}
         onSuccess={fetchSalespersons}
       />
     </div>

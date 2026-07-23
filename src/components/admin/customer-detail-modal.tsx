@@ -1,8 +1,21 @@
 "use client";
 
-import { X, Calendar, Eye } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { Calendar, Eye } from "lucide-react";
+
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface AssessmentItem {
   id: string;
@@ -12,7 +25,7 @@ interface AssessmentItem {
   pdfUrl?: string;
 }
 
-interface CustomerModalProps {
+interface CustomerSheetProps {
   customer: {
     id: string;
     name: string;
@@ -26,118 +39,118 @@ interface CustomerModalProps {
   onClose: () => void;
 }
 
-export function CustomerDetailModal({ customer, isOpen, onClose }: CustomerModalProps) {
-  if (!isOpen || !customer) return null;
+export function CustomerDetailModal({ customer, isOpen, onClose }: CustomerSheetProps) {
+  if (!customer) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-      <div className="w-full max-w-2xl rounded-3xl bg-white p-8 shadow-2xl space-y-6">
-        <div className="flex items-center justify-between border-b border-orange-500 border-t-2 pt-2 pb-4">
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+        <SheetHeader className="pb-4 border-b border-border">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-100 text-2xl font-extrabold text-[#E8621A]">
-              {customer.name[0]}
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-slate-900">{customer.name}</h3>
-              <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                <Calendar className="h-3.5 w-3.5" /> Customer since{" "}
+            <Avatar className="size-14 border-2 border-primary/20 bg-orange-50 text-[#E8621A] font-extrabold text-xl">
+              <AvatarFallback>{customer.name[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col gap-0.5 text-left">
+              <SheetTitle className="text-xl font-bold">{customer.name}</SheetTitle>
+              <SheetDescription className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Calendar className="size-3.5" /> Customer since{" "}
                 {format(new Date(customer.createdAt), "d MMM yyyy")}
-              </p>
+              </SheetDescription>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-full p-1 text-slate-400 hover:text-slate-600">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        </SheetHeader>
 
-        <div className="grid grid-cols-3 gap-4 text-xs text-slate-600 border-b border-orange-200/50 pb-6">
-          <div>
-            <span className="block font-bold text-slate-400 uppercase tracking-wider text-[10px]">PHONE</span>
-            <span className="font-bold text-slate-900 text-sm mt-0.5 block">{customer.phone}</span>
-          </div>
-          <div>
-            <span className="block font-bold text-slate-400 uppercase tracking-wider text-[10px]">EMAIL</span>
-            <span className="font-bold text-slate-900 text-sm mt-0.5 block">{customer.email || "N/A"}</span>
-          </div>
-          <div>
-            <span className="block font-bold text-slate-400 uppercase tracking-wider text-[10px]">ADDRESS</span>
-            <span className="font-bold text-slate-900 text-sm mt-0.5 block">{customer.address || "N/A"}</span>
-          </div>
-        </div>
-
-        {/* Assessment History */}
-        <div className="space-y-3">
-          <div className="rounded-xl bg-orange-50 p-3 text-sm font-bold text-[#E8621A]">
-            Assessment History ({customer.assessments?.length || 0})
+        <div className="py-6 flex flex-col gap-6">
+          {/* Customer Metadata Grid */}
+          <div className="grid grid-cols-3 gap-4 rounded-xl bg-muted/40 p-4 text-xs">
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-muted-foreground uppercase text-[10px]">Phone</span>
+              <span className="font-semibold text-foreground text-sm">{customer.phone}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-muted-foreground uppercase text-[10px]">Email</span>
+              <span className="font-semibold text-foreground text-sm truncate">{customer.email || "N/A"}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-muted-foreground uppercase text-[10px]">Address</span>
+              <span className="font-semibold text-foreground text-sm">{customer.address || "N/A"}</span>
+            </div>
           </div>
 
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase">
-                <th className="py-2">ASSESSMENT DATE</th>
-                <th className="py-2">SALESPERSON</th>
-                <th className="py-2">STATUS</th>
-                <th className="py-2">RESOURCES</th>
-                <th className="py-2 text-right">ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!customer.assessments || customer.assessments.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-4 text-center text-slate-400">
-                    No assessments recorded.
-                  </td>
-                </tr>
-              ) : (
-                customer.assessments.map((ass) => (
-                  <tr key={ass.id} className="border-b border-slate-50">
-                    <td className="py-3 font-semibold text-slate-700">
-                      {format(new Date(ass.createdAt), "dd MMM yyyy")}
-                    </td>
-                    <td className="py-3 flex items-center gap-2">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-100 text-[10px] font-bold text-orange-600">
-                        {ass.salesperson.name[0]}
-                      </span>
-                      {ass.salesperson.name}
-                    </td>
-                    <td className="py-3">
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
-                        {ass.status}
-                      </span>
-                    </td>
-                    <td className="py-3">
-                      {ass.pdfUrl ? (
-                        <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-bold text-orange-600">
-                          PDF
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="py-3 text-right">
-                      <Link
-                        href={`/admin/assessments/${ass.id}`}
-                        className="inline-flex items-center gap-1 font-bold text-[#E8621A] hover:underline"
-                      >
-                        <Eye className="h-3.5 w-3.5" /> View Assessment
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          {/* Assessment History */}
+          <div className="flex flex-col gap-3">
+            <h4 className="text-sm font-bold text-foreground">
+              Assessment History ({customer.assessments?.length || 0})
+            </h4>
+
+            <div className="rounded-xl border border-border overflow-hidden">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead className="text-[10px]">DATE</TableHead>
+                    <TableHead className="text-[10px]">SALESPERSON</TableHead>
+                    <TableHead className="text-[10px]">STATUS</TableHead>
+                    <TableHead className="text-[10px]">PDF</TableHead>
+                    <TableHead className="text-[10px] text-right">ACTION</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {!customer.assessments || customer.assessments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">
+                        No assessments recorded.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    customer.assessments.map((ass) => (
+                      <TableRow key={ass.id}>
+                        <TableCell className="font-medium text-xs">
+                          {format(new Date(ass.createdAt), "dd MMM yyyy")}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <Avatar className="size-5 bg-orange-100 text-[10px] text-orange-600 font-bold">
+                              <AvatarFallback>{ass.salesperson.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <span>{ass.salesperson.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="success" className="text-[10px]">
+                            {ass.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {ass.pdfUrl ? (
+                            <Badge variant="brand" className="text-[10px]">
+                              PDF
+                            </Badge>
+                          ) : (
+                            "—"
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button asChild variant="ghost" size="sm" className="h-7 text-xs text-[#E8621A]">
+                            <Link href={`/admin/assessments/${ass.id}`}>
+                              <Eye data-icon="inline-start" /> View
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-          <button
-            onClick={onClose}
-            className="rounded-xl border border-slate-200 px-6 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+        <SheetFooter className="pt-4 border-t border-border">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            Close
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

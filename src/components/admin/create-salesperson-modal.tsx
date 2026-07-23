@@ -1,8 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
 import { toast } from "sonner";
+
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
 
 interface Props {
   isOpen: boolean;
@@ -16,8 +27,6 @@ export function CreateSalespersonModal({ isOpen, onClose, onSuccess }: Props) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("seller123");
   const [loading, setLoading] = useState(false);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,92 +58,84 @@ export function CreateSalespersonModal({ isOpen, onClose, onSuccess }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="font-bold text-slate-900 text-lg">Create Salesperson</h3>
-          <button onClick={onClose} className="rounded-full p-1 text-slate-400 hover:text-slate-600">
-            <X className="h-5 w-5" />
-          </button>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col justify-between">
+        <div>
+          <SheetHeader className="pb-4 border-b border-border">
+            <SheetTitle>Create Salesperson</SheetTitle>
+            <SheetDescription>
+              Add a new salesperson account to access the mobile web app.
+            </SheetDescription>
+          </SheetHeader>
+
+          <form id="create-salesperson-form" onSubmit={handleSubmit} className="py-6 flex flex-col gap-4">
+            <FieldGroup className="flex flex-col gap-4">
+              <Field>
+                <FieldLabel htmlFor="sp-name">Full Name</FieldLabel>
+                <Input
+                  id="sp-name"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Jane Smith"
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="sp-email">Email Address</FieldLabel>
+                <Input
+                  id="sp-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="jane@gbath.com"
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="sp-phone">Phone Number</FieldLabel>
+                <Input
+                  id="sp-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="021 555 0100"
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="sp-pass">Initial Password</FieldLabel>
+                <Input
+                  id="sp-pass"
+                  type="text"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </Field>
+            </FieldGroup>
+
+            <p className="rounded-xl bg-muted p-3 text-xs text-muted-foreground italic">
+              The salesperson will log in using this email address and password.
+            </p>
+          </form>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3.5">
-          <div>
-            <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              Full Name
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Jane Smith"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#E8621A] focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="jane@gbath.com"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#E8621A] focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              Phone
-            </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="021 555 0100"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#E8621A] focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              Initial Password
-            </label>
-            <input
-              type="text"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#E8621A] focus:outline-none"
-            />
-          </div>
-
-          <p className="rounded-xl bg-slate-50 p-3 text-[11px] text-slate-400 italic">
-            The salesperson will log in using this email address and password.
-          </p>
-
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 rounded-xl bg-[#E8621A] py-2.5 text-xs font-bold text-white shadow-md hover:bg-orange-600 active:scale-[0.98] disabled:opacity-50"
-            >
-              {loading ? "Creating..." : "Create Account"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <SheetFooter className="pt-4 border-t border-border flex gap-2">
+          <Button variant="outline" type="button" onClick={onClose} className="flex-1">
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="create-salesperson-form"
+            disabled={loading}
+            className="flex-1 bg-[#E8621A] hover:bg-orange-600 text-white font-semibold"
+          >
+            {loading ? "Creating..." : "Create Account"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

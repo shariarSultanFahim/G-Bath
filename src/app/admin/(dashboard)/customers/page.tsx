@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Search, Plus, Eye } from "lucide-react";
+import { format } from "date-fns";
+
 import { CustomerDetailModal } from "@/components/admin/customer-detail-modal";
 import { NewCustomerModal } from "@/components/modals/new-customer-modal";
-import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface Customer {
   id: string;
@@ -20,7 +25,7 @@ export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [isNewSheetOpen, setIsNewSheetOpen] = useState(false);
 
   const fetchCustomers = async () => {
     try {
@@ -39,79 +44,86 @@ export default function AdminCustomersPage() {
   }, [search]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Customers</h1>
-        <button
-          onClick={() => setIsNewModalOpen(true)}
-          className="flex items-center gap-1.5 rounded-xl bg-[#E8621A] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-orange-600 active:scale-95"
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Customers</h1>
+          <p className="text-xs text-muted-foreground">Manage client list and assessment history.</p>
+        </div>
+        <Button
+          onClick={() => setIsNewSheetOpen(true)}
+          className="bg-[#E8621A] hover:bg-orange-600 text-white font-semibold text-xs"
         >
-          <Plus className="h-4 w-4" /> Add Customer
-        </button>
+          <Plus data-icon="inline-start" /> Add Customer
+        </Button>
       </div>
 
       {/* Search */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, phone, or address..."
-          className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs text-slate-900 focus:border-[#E8621A] focus:outline-none"
+          className="pl-9 text-xs"
         />
       </div>
 
       {/* Customers Table */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
-            <tr>
-              <th className="p-4">CUSTOMER</th>
-              <th className="p-4">PHONE</th>
-              <th className="p-4">ADDRESS</th>
-              <th className="p-4">LAST ASSESSMENT</th>
-              <th className="p-4">ASSESSMENTS</th>
-              <th className="p-4 text-right">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead className="text-[10px]">CUSTOMER</TableHead>
+              <TableHead className="text-[10px]">PHONE</TableHead>
+              <TableHead className="text-[10px]">ADDRESS</TableHead>
+              <TableHead className="text-[10px]">LAST ASSESSMENT</TableHead>
+              <TableHead className="text-[10px]">TOTAL ASSESSMENTS</TableHead>
+              <TableHead className="text-[10px] text-right">ACTIONS</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {customers.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="p-6 text-center text-slate-400">
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
                   No customers found.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               customers.map((c) => (
-                <tr key={c.id} className="hover:bg-slate-50 transition">
-                  <td className="p-4 flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-sm font-bold text-[#E8621A]">
-                      {c.name[0]}
+                <TableRow key={c.id}>
+                  <TableCell className="font-medium text-xs">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="size-8 bg-orange-100 text-[#E8621A] font-bold text-xs">
+                        <AvatarFallback>{c.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-bold text-foreground">{c.name}</span>
                     </div>
-                    <span className="font-bold text-slate-900">{c.name}</span>
-                  </td>
-                  <td className="p-4 font-medium text-slate-700">{c.phone}</td>
-                  <td className="p-4 text-slate-600">{c.address || "—"}</td>
-                  <td className="p-4 text-slate-500">
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{c.phone}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{c.address || "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
                     {c.assessments?.[0]
                       ? format(new Date(c.assessments[0].createdAt), "dd MMM yyyy")
                       : "—"}
-                  </td>
-                  <td className="p-4 font-bold text-slate-900">{c.assessments?.length || 0}</td>
-                  <td className="p-4 text-right">
-                    <button
+                  </TableCell>
+                  <TableCell className="font-bold text-xs">{c.assessments?.length || 0}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => setSelectedCustomer(c)}
-                      className="p-1.5 text-slate-400 hover:text-[#E8621A]"
+                      className="size-8 text-muted-foreground hover:text-[#E8621A]"
                     >
-                      <Eye className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
+                      <Eye className="size-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       <CustomerDetailModal
@@ -121,8 +133,8 @@ export default function AdminCustomersPage() {
       />
 
       <NewCustomerModal
-        isOpen={isNewModalOpen}
-        onClose={() => setIsNewModalOpen(false)}
+        isOpen={isNewSheetOpen}
+        onClose={() => setIsNewSheetOpen(false)}
         onSuccess={fetchCustomers}
       />
     </div>
