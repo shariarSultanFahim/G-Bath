@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth-utils";
 
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
       ])
     );
 
-    const dataPayload: any = {
+    const dataPayload: Prisma.AssessmentUncheckedCreateInput = {
       customerId,
       salespersonId: user.id,
       existingBathroom: cleanExistingBathroom,

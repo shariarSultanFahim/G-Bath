@@ -11,6 +11,40 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface CustomerInfo {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+interface SalespersonInfo {
+  id: string;
+  name: string;
+}
+
+interface AppointmentItem {
+  id: string;
+  customerId: string;
+  salespersonId: string;
+  date: string;
+  time: string;
+  status: string;
+  customer: CustomerInfo;
+  salesperson: SalespersonInfo;
+}
+
+interface AssessmentItem {
+  id: string;
+  customerId: string;
+  salespersonId: string;
+  status: string;
+  pdfUrl?: string | null;
+  createdAt: string;
+  customer: CustomerInfo;
+  salesperson: SalespersonInfo;
+}
+
 export default function AdminDashboardPage() {
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["admin-stats"],
@@ -27,8 +61,8 @@ export default function AdminDashboardPage() {
     pdfReadyCount: 0,
     newAssessmentsCount: 0,
   };
-  const appointments = (data?.appointments || []).filter((a: any) => a.status === "SCHEDULED");
-  const assessments = data?.assessments || [];
+  const appointments: AppointmentItem[] = (data?.appointments || []).filter((a: AppointmentItem) => a.status === "SCHEDULED");
+  const assessments: AssessmentItem[] = data?.assessments || [];
 
   return (
     <div className="flex flex-col gap-8">
@@ -136,7 +170,7 @@ export default function AdminDashboardPage() {
               No appointments scheduled for today.
             </Card>
           ) : (
-            appointments.map((appt: any) => (
+            appointments.map((appt: AppointmentItem) => (
               <Card key={appt.id} className="p-4 shadow-sm hover:shadow-md transition-all">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -186,9 +220,11 @@ export default function AdminDashboardPage() {
               <Skeleton className="h-32 w-full" />
             </>
           ) : assessments.length === 0 ? (
-            <p className="col-span-3 text-xs text-muted-foreground italic">No assessments submitted yet.</p>
+            <Card className="col-span-3 p-8 text-center text-xs text-muted-foreground">
+              No recent assessments.
+            </Card>
           ) : (
-            assessments.slice(0, 3).map((ass: any) => (
+            assessments.slice(0, 3).map((ass: AssessmentItem) => (
               <Card key={ass.id} className="flex flex-col justify-between p-5 border-2 border-primary/20">
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between">

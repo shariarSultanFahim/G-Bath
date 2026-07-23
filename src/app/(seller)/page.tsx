@@ -38,7 +38,7 @@ export default async function SellerHomePage() {
     },
   });
 
-  const pendingAppointment = appointments.find((a) => a.assessments.length === 0);
+  const pendingAppointment = appointments.find((a: any) => a.assessments.length === 0);
 
   const recentAssessments = await db.assessment.findMany({
     where: { salespersonId: user.id, pdfUrl: { not: null } },
@@ -95,7 +95,7 @@ export default async function SellerHomePage() {
         {appointments.length === 0 ? (
           <p className="text-xs text-slate-400 italic">No appointments scheduled for today.</p>
         ) : (
-          appointments.map((appt) => {
+          appointments.map((appt: any) => {
             const isAssessed = appt.assessments.length > 0;
             return (
               <Link
@@ -134,7 +134,7 @@ export default async function SellerHomePage() {
         {recentAssessments.length === 0 ? (
           <p className="text-xs text-slate-400 italic">No completed assessments yet.</p>
         ) : (
-          recentAssessments.map((ass) => (
+          recentAssessments.map((ass: any) => (
             <div
               key={ass.id}
               className="flex items-center justify-between rounded-2xl bg-white p-3.5 shadow-sm border border-slate-100"

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth-utils";
 
@@ -29,7 +30,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const body = await req.json();
     const { existingBathroom, wetArea, dryArea, upgrades, photos, ...rest } = body;
 
-    const dataPayload: any = { ...rest };
+    const dataPayload: Prisma.AssessmentUncheckedUpdateInput = { ...rest };
 
     if (existingBathroom) {
       dataPayload.existingBathroom = {

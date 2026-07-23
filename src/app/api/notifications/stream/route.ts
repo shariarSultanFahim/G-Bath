@@ -3,6 +3,15 @@ import { notificationEmitter } from "@/lib/notifications-stream";
 
 export const dynamic = "force-dynamic";
 
+interface NotificationPayload {
+  role?: string | null;
+  userId?: string | null;
+  title: string;
+  message: string;
+  link?: string | null;
+  type?: string;
+}
+
 export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user) {
@@ -13,7 +22,7 @@ export async function GET(req: Request) {
 
   const stream = new ReadableStream({
     start(controller) {
-      const sendEvent = (data: any) => {
+      const sendEvent = (data: NotificationPayload) => {
         if (isClosed) return;
         const isTarget =
           (data.role === "ADMIN" && user.role === "ADMIN") ||

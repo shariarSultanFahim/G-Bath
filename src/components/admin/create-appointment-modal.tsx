@@ -55,15 +55,15 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
     enabled: isOpen,
   });
 
-  const customerOptions = customers.map((c: any) => ({
+  const customerOptions = (customers as Array<{ id: string; name: string; phone: string; address?: string }>).map((c) => ({
     id: c.id,
     label: c.name,
     sublabel: `${c.phone}${c.address ? ` · ${c.address}` : ""}`,
   }));
 
-  const salespersonOptions = salespersons
-    .filter((s: any) => s.status === "ACTIVE")
-    .map((s: any) => ({
+  const salespersonOptions = (salespersons as Array<{ id: string; name: string; email: string; status: string }>)
+    .filter((s) => s.status === "ACTIVE")
+    .map((s) => ({
       id: s.id,
       label: s.name,
       sublabel: s.email,
