@@ -1,9 +1,9 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { ArrowLeft, Mail, Phone, Calendar, UserCheck, UserX, Eye, FileText, ClipboardList } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Calendar, UserCheck, UserX, Eye, FileText, KeyRound } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -11,11 +11,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ResetPasswordModal } from "@/components/admin/reset-password-modal";
 
 export default function AdminSalespersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const [isResetOpen, setIsResetOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: salesperson, isLoading } = useQuery({
@@ -83,6 +85,7 @@ export default function AdminSalespersonDetailPage({ params }: { params: Promise
         <CardContent className="pt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <Avatar className="size-16 border-2 border-primary/20 bg-orange-50 text-[#E8621A] font-extrabold text-2xl">
+              {salesperson.avatar && <AvatarImage src={salesperson.avatar} alt={salesperson.name} />}
               <AvatarFallback>{salesperson.name[0]}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-1">
@@ -109,6 +112,15 @@ export default function AdminSalespersonDetailPage({ params }: { params: Promise
                 <span className="font-semibold">{salesperson.phone || "No phone"}</span>
               </div>
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsResetOpen(true)}
+              className="text-xs font-semibold border-orange-200 text-orange-700 hover:bg-orange-50"
+            >
+              <KeyRound data-icon="inline-start" /> Reset Password
+            </Button>
 
             <Button
               variant={salesperson.status === "ACTIVE" ? "destructive" : "default"}
@@ -194,6 +206,12 @@ export default function AdminSalespersonDetailPage({ params }: { params: Promise
           </Table>
         </div>
       </div>
+
+      <ResetPasswordModal
+        salesperson={salesperson ? { id: salesperson.id, name: salesperson.name, email: salesperson.email } : null}
+        isOpen={isResetOpen}
+        onClose={() => setIsResetOpen(false)}
+      />
     </div>
   );
 }

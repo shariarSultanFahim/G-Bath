@@ -5,9 +5,23 @@ import { format } from "date-fns";
 import { AlertCircle, Eye, ArrowRight } from "lucide-react";
 import { SharePdfButton } from "@/components/seller/share-pdf-button";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default async function SellerHomePage() {
   const user = await getCurrentUser();
   if (!user) return null;
+
+  const dbUser = await db.user.findUnique({ where: { id: user.id } });
+  const displayName = dbUser?.name || user.name;
+  const avatarUrl = dbUser?.avatar;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -29,29 +43,27 @@ export default async function SellerHomePage() {
   const recentAssessments = await db.assessment.findMany({
     where: { salespersonId: user.id, pdfUrl: { not: null } },
     orderBy: { createdAt: "desc" },
-    take: 3,
+    take: 5,
     include: { customer: true },
   });
 
   return (
     <div className="space-y-6">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#E8621A]">Good</h1>
-        <span className="text-xs text-slate-400 font-medium">{format(new Date(), "hh:mm a")}</span>
-      </div>
-
       {/* Greeting */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Good morning, {user.name}</h2>
+          <h2 className="text-xl font-bold text-slate-900">{getGreeting()}, {displayName}</h2>
           <p className="text-xs text-slate-500">{format(new Date(), "dd MMM yyyy")}</p>
         </div>
         <Link
           href="/profile"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-100 text-[#E8621A] font-bold border-2 border-[#E8621A]"
+          className="overflow-hidden flex h-11 w-11 items-center justify-center rounded-full bg-orange-100 text-[#E8621A] font-bold border-2 border-[#E8621A] transition hover:scale-105"
         >
-          {user.name?.[0] || "A"}
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={displayName || "User"} className="h-full w-full object-cover" />
+          ) : (
+            displayName?.[0] || "A"
+          )}
         </Link>
       </div>
 

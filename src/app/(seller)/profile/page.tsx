@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { signOut } from "next-auth/react";
-import { ArrowLeft, Camera, Key, LogOut } from "lucide-react";
+import { ArrowLeft, Camera, Key, LogOut, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -10,24 +10,78 @@ export default function SellerProfilePage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [avatar, setAvatar] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    fetch("/api/auth/session")
+    fetch("/api/profile")
       .then((res) => res.json())
       .then((data) => {
-        if (data?.user) {
-          setName(data.user.name || "");
-          setEmail(data.user.email || "");
-          setPhone(data.user.phone || "");
+        if (data) {
+          setName(data.name || "");
+          setEmail(data.email || "");
+          setPhone(data.phone || "");
+          setAvatar(data.avatar || "");
         }
+      })
+      .catch(() => {
+        fetch("/api/auth/session")
+          .then((res) => res.json())
+          .then((data) => {
+            if (data?.user) {
+              setName(data.user.name || "");
+              setEmail(data.user.email || "");
+              setPhone(data.user.phone || "");
+            }
+          });
       });
   }, []);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "avatars");
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) throw new Error("Failed to upload image");
+      const uploadData = await uploadRes.json();
+      const avatarUrl = uploadData.urls?.[0] || uploadData.url;
+
+      if (!avatarUrl) throw new Error("No image URL returned from upload");
+
+      const profileRes = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: avatarUrl }),
+      });
+
+      if (!profileRes.ok) throw new Error("Failed to update profile picture");
+
+      setAvatar(avatarUrl);
+      toast.success("Profile picture updated!", { position: "top-center" });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload avatar");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleSaveInfo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +97,7 @@ export default function SellerProfilePage() {
       if (!res.ok) {
         toast.error("Failed to update profile");
       } else {
-        toast.success("Profile updated!");
+        toast.success("Profile updated!", { position: "top-center" });
       }
     } catch {
       toast.error("An error occurred");
@@ -71,7 +125,7 @@ export default function SellerProfilePage() {
         const err = await res.json();
         toast.error(err.error || "Failed to update password");
       } else {
-        toast.success("Password updated!");
+        toast.success("Password updated!", { position: "top-center" });
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
@@ -92,11 +146,34 @@ export default function SellerProfilePage() {
       {/* Avatar Card */}
       <div className="flex flex-col items-center rounded-3xl bg-white p-6 shadow-sm border border-slate-100 text-center">
         <div className="relative">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-100 text-3xl font-extrabold text-[#E8621A] border-4 border-white shadow-md">
-            {name[0]?.toUpperCase() || "S"}
-          </div>
-          <button className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-[#E8621A] text-white shadow-md hover:bg-orange-600">
-            <Camera className="h-4 w-4" />
+          {avatar ? (
+            <img
+              src={avatar}
+              alt={name}
+              className="h-24 w-24 rounded-full object-cover border-4 border-white shadow-md"
+            />
+          ) : (
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-100 text-3xl font-extrabold text-[#E8621A] border-4 border-white shadow-md">
+              {name[0]?.toUpperCase() || "S"}
+            </div>
+          )}
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleAvatarChange}
+            accept="image/*"
+            className="hidden"
+          />
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-[#E8621A] text-white shadow-md hover:bg-orange-600 disabled:opacity-50 transition"
+            title="Change Profile Picture"
+          >
+            {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
           </button>
         </div>
         <h2 className="mt-3 text-lg font-bold text-slate-900">{name}</h2>

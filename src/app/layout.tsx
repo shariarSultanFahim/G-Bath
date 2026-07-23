@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       >
         <Providers>
           <main className="flex-1">{children}</main>
-          <Toaster richColors />
+          <Toaster richColors position="top-center" />
         </Providers>
       </body>
     </html>

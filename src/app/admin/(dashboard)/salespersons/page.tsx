@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Plus, UserX, UserCheck, Eye } from "lucide-react";
+import { Search, Plus, UserX, UserCheck, Eye, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { CreateSalespersonModal } from "@/components/admin/create-salesperson-modal";
+import { ResetPasswordModal } from "@/components/admin/reset-password-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Salesperson {
@@ -19,6 +20,7 @@ interface Salesperson {
   name: string;
   email: string;
   phone: string;
+  avatar?: string;
   status: "ACTIVE" | "SUSPENDED";
   assessments?: any[];
 }
@@ -26,6 +28,8 @@ interface Salesperson {
 export default function AdminSalespersonsPage() {
   const [search, setSearch] = useState("");
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState<Salesperson | null>(null);
+
   const queryClient = useQueryClient();
 
   const { data: salespersons = [], isLoading } = useQuery<Salesperson[]>({
@@ -122,6 +126,7 @@ export default function AdminSalespersonsPage() {
                   <TableCell className="font-medium text-xs">
                     <div className="flex items-center gap-3">
                       <Avatar className="size-8 bg-orange-100 text-[#E8621A] font-bold text-xs">
+                        {s.avatar && <AvatarImage src={s.avatar} alt={s.name} />}
                         <AvatarFallback>{s.name[0]}</AvatarFallback>
                       </Avatar>
                       <Link href={`/admin/salespersons/${s.id}`} className="font-bold text-foreground hover:text-[#E8621A]">
@@ -142,6 +147,7 @@ export default function AdminSalespersonsPage() {
                       asChild
                       variant="ghost"
                       size="icon"
+                      title="View Details"
                       className="size-8 text-muted-foreground hover:text-[#E8621A]"
                     >
                       <Link href={`/admin/salespersons/${s.id}`}>
@@ -152,8 +158,18 @@ export default function AdminSalespersonsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => setResetTarget(s)}
+                      title="Reset Password"
+                      className="size-8 text-muted-foreground hover:text-amber-600"
+                    >
+                      <KeyRound className="size-4" />
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => toggleMutation.mutate({ id: s.id, currentStatus: s.status })}
-                      title={s.status === "ACTIVE" ? "Suspend" : "Activate"}
+                      title={s.status === "ACTIVE" ? "Suspend Account" : "Activate Account"}
                       className="size-8 text-muted-foreground hover:text-rose-600"
                     >
                       {s.status === "ACTIVE" ? <UserX className="size-4" /> : <UserCheck className="size-4" />}
@@ -170,6 +186,12 @@ export default function AdminSalespersonsPage() {
         isOpen={isCreateSheetOpen}
         onClose={() => setIsCreateSheetOpen(false)}
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin-salespersons"] })}
+      />
+
+      <ResetPasswordModal
+        salesperson={resetTarget}
+        isOpen={!!resetTarget}
+        onClose={() => setResetTarget(null)}
       />
     </div>
   );
