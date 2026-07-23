@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized: Admin only" }, { status: 403 });
   }
 
-  const appointments = await db.appointment.findMany({
+  const allAppointments = await db.appointment.findMany({
     orderBy: { date: "asc" },
     include: {
       customer: true,
@@ -25,10 +25,13 @@ export async function GET() {
     },
   });
 
-  const scheduledCount = appointments.filter((a) => a.status === "SCHEDULED").length;
-  const completedCount = appointments.filter((a) => a.status === "COMPLETED").length;
+  const scheduledCount = allAppointments.filter((a) => a.status === "SCHEDULED").length;
+  const completedCount = allAppointments.filter((a) => a.status === "COMPLETED").length;
   const pdfReadyCount = assessments.filter((a) => a.pdfUrl !== null).length;
   const newAssessmentsCount = assessments.filter((a) => a.status === "SUBMITTED").length;
+
+  // Filter Today's Appointments list to only SCHEDULED appointments
+  const scheduledAppointments = allAppointments.filter((a) => a.status === "SCHEDULED");
 
   return NextResponse.json({
     stats: {
@@ -37,7 +40,7 @@ export async function GET() {
       pdfReadyCount,
       newAssessmentsCount,
     },
-    appointments,
+    appointments: scheduledAppointments,
     assessments,
   });
 }

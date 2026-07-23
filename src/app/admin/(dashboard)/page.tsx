@@ -27,7 +27,7 @@ export default function AdminDashboardPage() {
     pdfReadyCount: 0,
     newAssessmentsCount: 0,
   };
-  const appointments = data?.appointments || [];
+  const appointments = (data?.appointments || []).filter((a: any) => a.status === "SCHEDULED");
   const assessments = data?.assessments || [];
 
   return (

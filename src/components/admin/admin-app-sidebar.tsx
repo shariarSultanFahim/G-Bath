@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, UserCheck, ClipboardList, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, UserCheck, Calendar, ClipboardList, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 import {
@@ -30,6 +30,7 @@ export function AdminAppSidebar({ user }: AdminAppSidebarProps) {
 
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/appointments", label: "Appointments", icon: Calendar },
     { href: "/admin/customers", label: "Customers", icon: Users },
     { href: "/admin/salespersons", label: "Salespersons", icon: UserCheck },
     { href: "/admin/assessments", label: "Assessments", icon: ClipboardList },
