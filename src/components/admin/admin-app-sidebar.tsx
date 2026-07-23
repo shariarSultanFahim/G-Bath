@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, UserCheck, Calendar, ClipboardList, LogOut } from "lucide-react";
@@ -39,11 +40,17 @@ export function AdminAppSidebar({ user }: AdminAppSidebarProps) {
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-xl font-extrabold tracking-tight text-[#E8621A]">Good</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            Admin Dashboard
-          </span>
+        <div className="flex items-center gap-3">
+          <Image
+            src="/logo-512.png"
+            alt="G-Bath Logo"
+            width={36}
+            height={36}
+            className="h-11 w-11 object-contain shrink-0"
+          />
+          <div className="group-data-[state=collapsed]:hidden flex flex-col gap-0.5">
+            <span className="text-lg font-bold tracking-tight text-[#E8621A]">Good Bathroom Renos</span>
+          </div>
         </div>
       </SidebarHeader>
 

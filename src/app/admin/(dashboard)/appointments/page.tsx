@@ -123,11 +123,10 @@ export default function AdminAppointmentsPage() {
               variant="ghost"
               size="sm"
               onClick={() => setStatusFilter(st)}
-              className={`h-7 px-3 text-xs font-semibold rounded-lg transition-all ${
-                statusFilter === st
-                  ? "bg-background text-[#E8621A] shadow-sm font-bold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`h-7 px-3 text-xs font-semibold rounded-lg transition-all ${statusFilter === st
+                ? "bg-background text-[#E8621A] shadow-sm font-bold"
+                : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               {st === "ALL" ? "All" : st.charAt(0) + st.slice(1).toLowerCase()}
             </Button>
@@ -144,7 +143,7 @@ export default function AdminAppointmentsPage() {
               <TableHead className="text-[10px]">SALESPERSON</TableHead>
               <TableHead className="text-[10px]">DATE & TIME</TableHead>
               <TableHead className="text-[10px]">STATUS</TableHead>
-              <TableHead className="text-[10px]">NOTES</TableHead>
+              {/* <TableHead className="text-[10px]">NOTES</TableHead> */}
               <TableHead className="text-[10px] text-right">ACTIONS</TableHead>
             </TableRow>
           </TableHeader>
@@ -204,8 +203,8 @@ export default function AdminAppointmentsPage() {
                           appt.status === "COMPLETED"
                             ? "success"
                             : appt.status === "CANCELLED"
-                            ? "destructive"
-                            : "brand"
+                              ? "destructive"
+                              : "brand"
                         }
                         className="text-[10px]"
                       >
@@ -216,9 +215,9 @@ export default function AdminAppointmentsPage() {
                       </Badge>
                     </TableCell>
 
-                    <TableCell className="text-xs text-muted-foreground max-w-xs truncate">
+                    {/* <TableCell className="text-xs text-muted-foreground max-w-xs truncate">
                       {appt.notes || "—"}
-                    </TableCell>
+                    </TableCell> */}
 
                     {/* Actions Dropdown */}
                     <TableCell className="text-right">

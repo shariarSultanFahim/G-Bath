@@ -187,7 +187,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
               </Field>
 
               {/* Notes */}
-              <Field>
+              {/* <Field>
                 <FieldLabel htmlFor="appt-notes">Notes (Optional)</FieldLabel>
                 <Input
                   id="appt-notes"
@@ -196,7 +196,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="e.g. Full master bathroom renovation"
                 />
-              </Field>
+              </Field> */}
             </FieldGroup>
           </form>
         </div>
