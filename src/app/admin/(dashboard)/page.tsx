@@ -1,46 +1,58 @@
+"use client";
+
 import Link from "next/link";
 import { format } from "date-fns";
-import { Eye, CalendarDays, CheckCircle2, FileText, Sparkles } from "lucide-react";
-import { db } from "@/lib/db";
+import { Eye, CalendarDays, CheckCircle2, FileText, Sparkles, RefreshCw } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default async function AdminDashboardPage() {
-  const appointments = await db.appointment.findMany({
-    orderBy: { date: "asc" },
-    include: {
-      customer: true,
-      salesperson: true,
-      assessments: true,
+export default function AdminDashboardPage() {
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ["admin-stats"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/stats");
+      if (!res.ok) throw new Error("Failed to fetch admin stats");
+      return res.json();
     },
   });
 
-  const assessments = await db.assessment.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      customer: true,
-      salesperson: true,
-    },
-  });
-
-  const scheduledCount = appointments.filter((a) => a.status === "SCHEDULED").length;
-  const completedCount = appointments.filter((a) => a.status === "COMPLETED").length;
-  const pdfReadyCount = assessments.filter((a) => a.pdfUrl !== null).length;
-  const newAssessmentsCount = assessments.filter((a) => a.status === "SUBMITTED").length;
+  const stats = data?.stats || {
+    scheduledCount: 0,
+    completedCount: 0,
+    pdfReadyCount: 0,
+    newAssessmentsCount: 0,
+  };
+  const appointments = data?.appointments || [];
+  const assessments = data?.assessments || [];
 
   return (
     <div className="flex flex-col gap-8">
       {/* Date Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-[#E8621A]">
-          {format(new Date(), "EEEE, dd MMMM yyyy")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Welcome to Good Bathroom Renos administrative overview.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#E8621A]">
+            {format(new Date(), "EEEE, dd MMMM yyyy")}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Welcome to Good Bathroom Renos administrative overview.
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="text-xs text-muted-foreground"
+        >
+          <RefreshCw data-icon="inline-start" className={isFetching ? "animate-spin" : ""} />
+          Refetch Data
+        </Button>
       </div>
 
       {/* 4 Stat Cards */}
@@ -51,7 +63,11 @@ export default async function AdminDashboardPage() {
             <CalendarDays className="size-4 text-[#E8621A]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{scheduledCount}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <div className="text-2xl font-bold text-foreground">{stats.scheduledCount}</div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">Upcoming site visits</p>
           </CardContent>
         </Card>
@@ -62,7 +78,11 @@ export default async function AdminDashboardPage() {
             <CheckCircle2 className="size-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{completedCount}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <div className="text-2xl font-bold text-foreground">{stats.completedCount}</div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">Assessed appointments</p>
           </CardContent>
         </Card>
@@ -73,7 +93,11 @@ export default async function AdminDashboardPage() {
             <FileText className="size-4 text-slate-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{pdfReadyCount}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <div className="text-2xl font-bold text-foreground">{stats.pdfReadyCount}</div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">Generated reports</p>
           </CardContent>
         </Card>
@@ -84,7 +108,11 @@ export default async function AdminDashboardPage() {
             <Sparkles className="size-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{newAssessmentsCount}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <div className="text-2xl font-bold text-foreground">{stats.newAssessmentsCount}</div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">Pending review</p>
           </CardContent>
         </Card>
@@ -98,12 +126,17 @@ export default async function AdminDashboardPage() {
         </div>
 
         <div className="flex flex-col gap-3">
-          {appointments.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          ) : appointments.length === 0 ? (
             <Card className="p-8 text-center text-xs text-muted-foreground">
               No appointments scheduled for today.
             </Card>
           ) : (
-            appointments.map((appt) => (
+            appointments.map((appt: any) => (
               <Card key={appt.id} className="p-4 shadow-sm hover:shadow-md transition-all">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -146,10 +179,16 @@ export default async function AdminDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {assessments.length === 0 ? (
+          {isLoading ? (
+            <>
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </>
+          ) : assessments.length === 0 ? (
             <p className="col-span-3 text-xs text-muted-foreground italic">No assessments submitted yet.</p>
           ) : (
-            assessments.slice(0, 3).map((ass) => (
+            assessments.slice(0, 3).map((ass: any) => (
               <Card key={ass.id} className="flex flex-col justify-between p-5 border-2 border-primary/20">
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between">

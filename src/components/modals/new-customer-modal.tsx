@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   Sheet,
@@ -27,6 +28,7 @@ export function NewCustomerModal({ isOpen, onClose, onSuccess }: Props) {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +50,9 @@ export function NewCustomerModal({ isOpen, onClose, onSuccess }: Props) {
         setEmail("");
         setPhone("");
         setAddress("");
+        queryClient.invalidateQueries({ queryKey: ["admin-customers"] });
+        queryClient.invalidateQueries({ queryKey: ["customers"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
         onClose();
         onSuccess?.();
       }

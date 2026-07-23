@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Search, Plus, UserX, UserCheck } from "lucide-react";
+import { useState } from "react";
+import Link from "next/link";
+import { Search, Plus, UserX, UserCheck, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { CreateSalespersonModal } from "@/components/admin/create-salesperson-modal";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Salesperson {
   id: string;
@@ -21,42 +24,38 @@ interface Salesperson {
 }
 
 export default function AdminSalespersonsPage() {
-  const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
   const [search, setSearch] = useState("");
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchSalespersons = async () => {
-    try {
+  const { data: salespersons = [], isLoading } = useQuery<Salesperson[]>({
+    queryKey: ["admin-salespersons"],
+    queryFn: async () => {
       const res = await fetch("/api/admin/salespersons");
-      if (res.ok) {
-        const data = await res.json();
-        setSalespersons(data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      if (!res.ok) throw new Error("Failed to fetch salespersons");
+      return res.json();
+    },
+  });
 
-  useEffect(() => {
-    fetchSalespersons();
-  }, []);
-
-  const toggleStatus = async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
-    try {
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, currentStatus }: { id: string; currentStatus: string }) => {
+      const newStatus = currentStatus === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
       const res = await fetch(`/api/admin/salespersons/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (res.ok) {
-        toast.success(`Salesperson ${newStatus.toLowerCase()}`);
-        fetchSalespersons();
-      }
-    } catch {
+      if (!res.ok) throw new Error("Failed to update status");
+      return newStatus;
+    },
+    onSuccess: (newStatus) => {
+      toast.success(`Salesperson ${newStatus.toLowerCase()}`);
+      queryClient.invalidateQueries({ queryKey: ["admin-salespersons"] });
+    },
+    onError: () => {
       toast.error("Failed to update status");
-    }
-  };
+    },
+  });
 
   const filtered = salespersons.filter(
     (s) =>
@@ -105,7 +104,13 @@ export default function AdminSalespersonsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="p-4">
+                  <Skeleton className="h-10 w-full" />
+                </TableCell>
+              </TableRow>
+            ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
                   No salespersons found.
@@ -119,7 +124,9 @@ export default function AdminSalespersonsPage() {
                       <Avatar className="size-8 bg-orange-100 text-[#E8621A] font-bold text-xs">
                         <AvatarFallback>{s.name[0]}</AvatarFallback>
                       </Avatar>
-                      <span className="font-bold text-foreground">{s.name}</span>
+                      <Link href={`/admin/salespersons/${s.id}`} className="font-bold text-foreground hover:text-[#E8621A]">
+                        {s.name}
+                      </Link>
                     </div>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">{s.email}</TableCell>
@@ -130,11 +137,22 @@ export default function AdminSalespersonsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="font-bold text-xs">{s.assessments?.length || 0}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex items-center justify-end gap-1">
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:text-[#E8621A]"
+                    >
+                      <Link href={`/admin/salespersons/${s.id}`}>
+                        <Eye className="size-4" />
+                      </Link>
+                    </Button>
+
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => toggleStatus(s.id, s.status)}
+                      onClick={() => toggleMutation.mutate({ id: s.id, currentStatus: s.status })}
                       title={s.status === "ACTIVE" ? "Suspend" : "Activate"}
                       className="size-8 text-muted-foreground hover:text-rose-600"
                     >
@@ -151,7 +169,7 @@ export default function AdminSalespersonsPage() {
       <CreateSalespersonModal
         isOpen={isCreateSheetOpen}
         onClose={() => setIsCreateSheetOpen(false)}
-        onSuccess={fetchSalespersons}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin-salespersons"] })}
       />
     </div>
   );

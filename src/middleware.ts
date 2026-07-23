@@ -4,13 +4,12 @@ import { getToken } from "next-auth/jwt";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-  // Public paths
+  // Always allow API routes & public assets
   if (
+    pathname.startsWith("/api") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/admin/login") ||
-    pathname.startsWith("/api/auth") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon.ico") ||
     pathname.startsWith("/uploads")
@@ -18,7 +17,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Not logged in
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+  // Not logged in -> redirect to login page
   if (!token) {
     if (pathname.startsWith("/admin")) {
       return NextResponse.redirect(new URL("/admin/login", req.url));
@@ -28,12 +29,12 @@ export async function middleware(req: NextRequest) {
 
   const role = token.role as string;
 
-  // Protect Admin routes
+  // Protect Admin UI pages
   if (pathname.startsWith("/admin") && role !== "ADMIN") {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  // Protect Seller routes (root path & seller app)
+  // Protect Seller UI pages (prevent admin from viewing seller view unless navigating directly)
   if (!pathname.startsWith("/admin") && role === "ADMIN") {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
@@ -42,5 +43,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

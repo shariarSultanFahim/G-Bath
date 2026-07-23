@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   Sheet,
@@ -18,7 +19,7 @@ import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 export function CreateSalespersonModal({ isOpen, onClose, onSuccess }: Props) {
@@ -27,6 +28,7 @@ export function CreateSalespersonModal({ isOpen, onClose, onSuccess }: Props) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("seller123");
   const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,8 +49,10 @@ export function CreateSalespersonModal({ isOpen, onClose, onSuccess }: Props) {
         setName("");
         setEmail("");
         setPhone("");
+        queryClient.invalidateQueries({ queryKey: ["admin-salespersons"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
         onClose();
-        onSuccess();
+        onSuccess?.();
       }
     } catch {
       toast.error("An error occurred");

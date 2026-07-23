@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { Search, Plus, Eye } from "lucide-react";
 import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 
-import { CustomerDetailModal } from "@/components/admin/customer-detail-modal";
 import { NewCustomerModal } from "@/components/modals/new-customer-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Customer {
   id: string;
@@ -22,26 +24,17 @@ interface Customer {
 }
 
 export default function AdminCustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isNewSheetOpen, setIsNewSheetOpen] = useState(false);
 
-  const fetchCustomers = async () => {
-    try {
+  const { data: customers = [], isLoading, refetch } = useQuery<Customer[]>({
+    queryKey: ["admin-customers", search],
+    queryFn: async () => {
       const res = await fetch(`/api/customers?search=${encodeURIComponent(search)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setCustomers(data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchCustomers();
-  }, [search]);
+      if (!res.ok) throw new Error("Failed to fetch customers");
+      return res.json();
+    },
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -84,7 +77,13 @@ export default function AdminCustomersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {customers.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="p-4">
+                  <Skeleton className="h-10 w-full" />
+                </TableCell>
+              </TableRow>
+            ) : customers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
                   No customers found.
@@ -98,7 +97,9 @@ export default function AdminCustomersPage() {
                       <Avatar className="size-8 bg-orange-100 text-[#E8621A] font-bold text-xs">
                         <AvatarFallback>{c.name[0]}</AvatarFallback>
                       </Avatar>
-                      <span className="font-bold text-foreground">{c.name}</span>
+                      <Link href={`/admin/customers/${c.id}`} className="font-bold text-foreground hover:text-[#E8621A]">
+                        {c.name}
+                      </Link>
                     </div>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">{c.phone}</TableCell>
@@ -111,12 +112,14 @@ export default function AdminCustomersPage() {
                   <TableCell className="font-bold text-xs">{c.assessments?.length || 0}</TableCell>
                   <TableCell className="text-right">
                     <Button
+                      asChild
                       variant="ghost"
                       size="icon"
-                      onClick={() => setSelectedCustomer(c)}
                       className="size-8 text-muted-foreground hover:text-[#E8621A]"
                     >
-                      <Eye className="size-4" />
+                      <Link href={`/admin/customers/${c.id}`}>
+                        <Eye className="size-4" />
+                      </Link>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -126,16 +129,10 @@ export default function AdminCustomersPage() {
         </Table>
       </div>
 
-      <CustomerDetailModal
-        customer={selectedCustomer}
-        isOpen={!!selectedCustomer}
-        onClose={() => setSelectedCustomer(null)}
-      />
-
       <NewCustomerModal
         isOpen={isNewSheetOpen}
         onClose={() => setIsNewSheetOpen(false)}
-        onSuccess={fetchCustomers}
+        onSuccess={() => refetch()}
       />
     </div>
   );

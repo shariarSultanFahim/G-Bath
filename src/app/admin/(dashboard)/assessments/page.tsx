@@ -1,20 +1,33 @@
+"use client";
+
 import Link from "next/link";
 import { format } from "date-fns";
 import { Eye, FileText } from "lucide-react";
-import { db } from "@/lib/db";
+import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default async function AdminAssessmentsPage() {
-  const assessments = await db.assessment.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      customer: true,
-      salesperson: true,
-      appointment: true,
+interface AssessmentItem {
+  id: string;
+  customer: { name: string };
+  salesperson: { name: string };
+  appointment?: { date: string };
+  submittedAt?: string;
+  status: string;
+  pdfUrl?: string;
+}
+
+export default function AdminAssessmentsPage() {
+  const { data: assessments = [], isLoading } = useQuery<AssessmentItem[]>({
+    queryKey: ["admin-assessments"],
+    queryFn: async () => {
+      const res = await fetch("/api/assessments");
+      if (!res.ok) throw new Error("Failed to fetch assessments");
+      return res.json();
     },
   });
 
@@ -42,7 +55,13 @@ export default async function AdminAssessmentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {assessments.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="p-4">
+                  <Skeleton className="h-10 w-full" />
+                </TableCell>
+              </TableRow>
+            ) : assessments.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center text-xs text-muted-foreground py-8">
                   No assessments found.
