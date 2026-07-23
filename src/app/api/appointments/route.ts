@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth-utils";
+import { notificationEmitter } from "@/lib/notifications-stream";
 
 export async function GET(req: Request) {
   const user = await getCurrentUser();
@@ -41,7 +42,25 @@ export async function POST(req: Request) {
         time,
         notes: notes || "",
       },
+      include: {
+        customer: true,
+        salesperson: true,
+      },
     });
+
+    // Create & Broadcast real-time notification for assigned SELLER
+    const notif = await db.notification.create({
+      data: {
+        userId: salespersonId,
+        role: "SELLER",
+        title: "New Appointment Assigned",
+        message: `Appointment scheduled with ${appointment.customer.name} on ${time}`,
+        link: `/appointments/${appointment.id}`,
+        type: "NEW_APPOINTMENT",
+      },
+    });
+
+    notificationEmitter.emit("notification", notif);
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (err) {
