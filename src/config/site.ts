@@ -2,8 +2,8 @@ import type { SiteConfig } from "@/types/site-config";
 import { env } from "@/env";
 
 export const siteConfig: SiteConfig = {
-  name: "Rise & Impact Admin Panel",
-  description: "Production-ready Next.js 16+ starter built with Tailwind CSS 4 and TypeScript.",
+  name: "Good Bathroom Renos Salesperson Assessment",
+  description: "Good Bathroom Renos Salesperson Assessment",
   url: env.NEXT_PUBLIC_SITE_URL,
   author: "",
   locale: "en",

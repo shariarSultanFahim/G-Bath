@@ -30,5 +30,17 @@ export const seoConfig: Metadata = {
     site: siteConfig.social.twitter,
     creator: siteConfig.social.twitter,
     images: [siteConfig.ogImage]
+  },
+  appleWebApp: {
+    capable: true,
+    title: "G-Bath",
+    statusBarStyle: "default"
+  },
+  formatDetection: {
+    telephone: false
+  },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png"
   }
 };

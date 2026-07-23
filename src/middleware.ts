@@ -12,7 +12,10 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/admin/login") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon.ico") ||
-    pathname.startsWith("/uploads")
+    pathname.startsWith("/uploads") ||
+    pathname.startsWith("/manifest") ||
+    pathname.startsWith("/sw.js") ||
+    pathname.startsWith("/logo")
   ) {
     return NextResponse.next();
   }
