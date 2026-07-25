@@ -38,10 +38,10 @@ export default function SellerCustomersPage() {
   return (
     <div className="space-y-5">
       {/* Top bar */}
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[#E8621A]">Good</h1>
         <span className="text-xs text-slate-400 font-medium">{format(new Date(), "hh:mm a")}</span>
-      </div>
+      </div> */}
 
       {/* Search + New button */}
       <div className="flex items-center gap-2">

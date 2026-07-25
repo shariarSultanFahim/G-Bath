@@ -20,13 +20,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     customerName: assessment.customer.name,
     customerPhone: assessment.customer.phone,
     customerAddress: assessment.customer.address,
+    customerEmail: assessment.customer.email,
+    sellerName: assessment.salesperson.name,
+    sellerEmail: assessment.salesperson.email,
+    sellerPhone: assessment.salesperson.phone || undefined,
     dateStr: format(assessment.createdAt, "dd MMM yyyy"),
     existingBathroom: (assessment.existingBathroom as Record<string, string>) || {},
     wetArea: (assessment.wetArea as unknown as Record<string, string>) || {},
     dryArea: (assessment.dryArea as unknown as Record<string, string>) || {},
     upgrades: (assessment.upgrades as Record<string, string>) || {},
     notes: assessment.existingBathroom?.notes || undefined,
-    photosCount: assessment.photos?.length || 0,
+    photos: assessment.photos || [],
   };
 
   try {

@@ -25,10 +25,10 @@ export default async function AppointmentDetailPage({ params }: { params: Promis
   return (
     <div className="space-y-5">
       {/* Top Header */}
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[#E8621A]">Good</h1>
         <span className="text-xs text-slate-400 font-medium">{format(new Date(), "hh:mm a")}</span>
-      </div>
+      </div> */}
 
       <Link href="/appointments" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#E8621A]">
         <ArrowLeft className="h-4 w-4" /> Appointments

@@ -19,10 +19,10 @@ export default async function SellerAssessmentsPage() {
   return (
     <div className="space-y-5">
       {/* Top Header */}
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[#E8621A]">Good</h1>
         <span className="text-xs text-slate-400 font-medium">{format(new Date(), "hh:mm a")}</span>
-      </div>
+      </div> */}
 
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-900">Assessments</h2>
