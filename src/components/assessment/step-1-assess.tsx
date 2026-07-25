@@ -185,19 +185,29 @@ export function Step1Assess({
             Existing Wall Material
           </label>
           <div className="flex gap-4">
-            {["Tile", "Acrylic"].map((mat) => (
-              <label key={mat} className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                <input
-                  type="radio"
-                  name="wallMaterial"
-                  value={mat}
-                  checked={data.wallMaterial === mat}
-                  onChange={(e) => onUpdate({ wallMaterial: e.target.value })}
-                  className="accent-[#E8621A] h-4 w-4"
-                />
-                {mat}
-              </label>
-            ))}
+            {["Tile", "Acrylic"].map((mat) => {
+              const selectedList = data.wallMaterial ? data.wallMaterial.split(", ").filter(Boolean) : [];
+              const isChecked = selectedList.includes(mat);
+              return (
+                <label key={mat} className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => {
+                      let updated: string[];
+                      if (isChecked) {
+                        updated = selectedList.filter((m) => m !== mat);
+                      } else {
+                        updated = [...selectedList, mat];
+                      }
+                      onUpdate({ wallMaterial: updated.join(", ") });
+                    }}
+                    className="accent-[#E8621A] h-4 w-4 rounded"
+                  />
+                  {mat}
+                </label>
+              );
+            })}
           </div>
         </div>
 

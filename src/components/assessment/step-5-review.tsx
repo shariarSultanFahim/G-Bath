@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+export interface Step4Data {
+  glassDoor: string;
+}
+
 import { Step1Data } from "./step-1-assess";
 import { Step2Data } from "./step-2-wet-area";
 import { Step3Data } from "./step-3-dry-area";
-import { Step4Data } from "./step-4-upgrades";
 import { FileText, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -88,7 +91,9 @@ export function Step5Review({
         <div className="space-y-2 text-xs">
           <div className="flex justify-between"><span className="text-slate-500">Bath</span><span className="font-semibold">{step2.includeBath ? `Yes - ${step2.bathDetails || ""}` : "No"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Shower</span><span className="font-semibold">{step2.includeShower ? `Yes - ${step2.showerDetails || ""}` : "No"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Glass Door</span><span className="font-semibold">{step4.glassDoor || "—"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Acrylic Panel</span><span className="font-semibold">{step2.acrylicTilePanel || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Package Upgrades</span><span className="font-semibold">{step3.packageUpgrades?.join(", ") || "None"}</span></div>
         </div>
       </div>
 
@@ -106,20 +111,6 @@ export function Step5Review({
           <div className="flex justify-between"><span className="text-slate-500">Mirror</span><span className="font-semibold">{step3.mirror || "—"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Lighting</span><span className="font-semibold">{step3.vanityLighting || "—"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Towel Bars</span><span className="font-semibold">{step3.towelBars || "—"}</span></div>
-        </div>
-      </div>
-
-      {/* Section 4: Upgrades */}
-      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Upgrades</h4>
-          <button onClick={() => onGoToStep(4)} className="text-xs font-bold text-[#E8621A]">
-            Edit
-          </button>
-        </div>
-        <div className="space-y-2 text-xs">
-          <div className="flex justify-between"><span className="text-slate-500">Package Upgrades</span><span className="font-semibold">{step3.packageUpgrades?.join(", ") || "None"}</span></div>
-          <div className="flex justify-between"><span className="text-slate-500">Glass Door</span><span className="font-semibold">{step4.glassDoor || "—"}</span></div>
         </div>
       </div>
 

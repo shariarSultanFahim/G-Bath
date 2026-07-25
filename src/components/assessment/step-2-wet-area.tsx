@@ -1,5 +1,8 @@
 "use client";
 
+import { Step3Data } from "./step-3-dry-area";
+import { Step4Data } from "./step-5-review";
+
 export interface Step2Data {
   includeBath: boolean;
   bathDetails: string;
@@ -11,7 +14,11 @@ export interface Step2Data {
 
 interface Props {
   data: Step2Data;
+  packageUpgrades?: string[];
+  glassDoor?: string;
   onUpdate: (data: Partial<Step2Data>) => void;
+  onUpdateStep3: (data: Partial<Step3Data>) => void;
+  onUpdateStep4: (data: Partial<Step4Data>) => void;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -24,7 +31,41 @@ const ACRYLIC_PANELS = [
   "Acrylic Gilded Marble",
 ];
 
-export function Step2WetArea({ data, onUpdate, onNext, onPrev }: Props) {
+const GLASS_DOOR_OPTIONS = [
+  "Sliding Door",
+  "Hinged Pivot Door",
+  "Fixed Panel",
+  "Pivoting Fixed Panel",
+];
+
+const UPGRADES_LIST = [
+  "Shower Wand",
+  "Shower Wand Rain/Head",
+  "Niche",
+  "Grab Bar",
+  "Glass Shelf",
+  "Cultured Stone Base (Marble, White)",
+];
+
+export function Step2WetArea({
+  data,
+  packageUpgrades = [],
+  glassDoor = "",
+  onUpdate,
+  onUpdateStep3,
+  onUpdateStep4,
+  onNext,
+  onPrev,
+}: Props) {
+  const toggleUpgrade = (item: string) => {
+    const exists = packageUpgrades.includes(item);
+    if (exists) {
+      onUpdateStep3({ packageUpgrades: packageUpgrades.filter((i) => i !== item) });
+    } else {
+      onUpdateStep3({ packageUpgrades: [...packageUpgrades, item] });
+    }
+  };
+
   return (
     <div className="space-y-5">
       {/* Wet Area Package */}
@@ -78,6 +119,26 @@ export function Step2WetArea({ data, onUpdate, onNext, onPrev }: Props) {
         </div>
       </div>
 
+      {/* Glass Door (under Wet Area Package) */}
+      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Glass Door</h3>
+        <div className="space-y-3 pt-1">
+          {GLASS_DOOR_OPTIONS.map((door) => (
+            <label key={door} className="flex items-center gap-3 text-sm font-medium text-slate-800 cursor-pointer">
+              <input
+                type="radio"
+                name="glassDoor"
+                value={door}
+                checked={glassDoor === door}
+                onChange={(e) => onUpdateStep4({ glassDoor: e.target.value })}
+                className="h-4 w-4 accent-[#E8621A]"
+              />
+              {door}
+            </label>
+          ))}
+        </div>
+      </div>
+
       {/* Acrylic Tile Panel System */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Acrylic Tile Panel System</h3>
@@ -94,6 +155,24 @@ export function Step2WetArea({ data, onUpdate, onNext, onPrev }: Props) {
                 className="h-4 w-4 accent-[#E8621A]"
               />
               {panel}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Package Upgrades (Moved to Step 2) */}
+      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Package Upgrades</h3>
+        <div className="space-y-2.5">
+          {UPGRADES_LIST.map((item) => (
+            <label key={item} className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={packageUpgrades.includes(item)}
+                onChange={() => toggleUpgrade(item)}
+                className="h-4 w-4 rounded accent-[#E8621A]"
+              />
+              {item}
             </label>
           ))}
         </div>

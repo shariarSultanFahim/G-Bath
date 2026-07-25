@@ -19,25 +19,7 @@ interface Props {
   onPrev: () => void;
 }
 
-const UPGRADES_LIST = [
-  "Shower Wand",
-  "Shower Wand Rain/Head",
-  "Niche",
-  "Grab Bar",
-  "Glass Shelf",
-  "Cultured Stone Base (Marble, White)",
-];
-
 export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
-  const toggleUpgrade = (item: string) => {
-    const current = data.packageUpgrades || [];
-    const exists = current.includes(item);
-    if (exists) {
-      onUpdate({ packageUpgrades: current.filter((i) => i !== item) });
-    } else {
-      onUpdate({ packageUpgrades: [...current, item] });
-    }
-  };
 
   return (
     <div className="space-y-5">
@@ -45,19 +27,29 @@ export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dry Area Package</h3>
         <div className="space-y-2">
-          {["Acrylic Flooring", "Paint Finishes"].map((pkg) => (
-            <label key={pkg} className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
-              <input
-                type="radio"
-                name="dryPackage"
-                value={pkg}
-                checked={data.package === pkg}
-                onChange={(e) => onUpdate({ package: e.target.value })}
-                className="h-4 w-4 accent-[#E8621A]"
-              />
-              {pkg}
-            </label>
-          ))}
+          {["Acrylic Flooring", "Paint Finishes"].map((pkg) => {
+            const selectedList = data.package ? data.package.split(", ").filter(Boolean) : [];
+            const isChecked = selectedList.includes(pkg);
+            return (
+              <label key={pkg} className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={() => {
+                    let updated: string[];
+                    if (isChecked) {
+                      updated = selectedList.filter((p) => p !== pkg);
+                    } else {
+                      updated = [...selectedList, pkg];
+                    }
+                    onUpdate({ package: updated.join(", ") });
+                  }}
+                  className="h-4 w-4 rounded accent-[#E8621A]"
+                />
+                {pkg}
+              </label>
+            );
+          })}
         </div>
       </div>
 
@@ -86,24 +78,6 @@ export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
           placeholder="Vanity details..."
           className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#E8621A] focus:outline-none"
         />
-      </div>
-
-      {/* Package Upgrades */}
-      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Package Upgrades</h3>
-        <div className="space-y-2.5">
-          {UPGRADES_LIST.map((item) => (
-            <label key={item} className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={(data.packageUpgrades || []).includes(item)}
-                onChange={() => toggleUpgrade(item)}
-                className="h-4 w-4 rounded accent-[#E8621A]"
-              />
-              {item}
-            </label>
-          ))}
-        </div>
       </div>
 
       {/* Mirror & Lighting & Towel Bars */}

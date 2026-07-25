@@ -6,8 +6,7 @@ import { StepIndicator } from "@/components/assessment/step-indicator";
 import { Step1Assess, Step1Data } from "@/components/assessment/step-1-assess";
 import { Step2WetArea, Step2Data } from "@/components/assessment/step-2-wet-area";
 import { Step3DryArea, Step3Data } from "@/components/assessment/step-3-dry-area";
-import { Step4Upgrades, Step4Data } from "@/components/assessment/step-4-upgrades";
-import { Step5Review } from "@/components/assessment/step-5-review";
+import { Step5Review, Step4Data } from "@/components/assessment/step-5-review";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -92,16 +91,16 @@ export default function NewAssessmentPage() {
     if (name) setCustomerName(name);
   };
 
-  // Only advance step counter during step 1-4 without calling API
+  // Only advance step counter during step 1-3 without calling API
   const handleNextStep = () => {
     if (!customerId) {
       toast.error("Please select a customer first");
       return;
     }
-    setCurrentStep((prev) => Math.min(prev + 1, 5));
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
   };
 
-  // Generate PDF or Save Assessment with all 5 steps payload
+  // Generate PDF or Save Assessment with 4 steps payload
   const createFullAssessment = async () => {
     if (!customerId) {
       toast.error("Customer missing");
@@ -191,15 +190,13 @@ export default function NewAssessmentPage() {
   const getStepTitle = () => {
     switch (currentStep) {
       case 1:
-        return "Assess · Step 1 of 5";
+        return "Assess · Step 1 of 4";
       case 2:
-        return "Wet Area · Step 2 of 5";
+        return "Wet Area · Step 2 of 4";
       case 3:
-        return "Dry Area · Step 3 of 5";
+        return "Dry Area · Step 3 of 4";
       case 4:
-        return "Upgrades · Step 4 of 5";
-      case 5:
-        return "Review · Step 5 of 5";
+        return "Review · Step 4 of 4";
       default:
         return "";
     }
@@ -218,7 +215,7 @@ export default function NewAssessmentPage() {
         </button>
       </div>
 
-      <StepIndicator currentStep={currentStep} />
+      <StepIndicator currentStep={currentStep} totalSteps={4} />
 
       {currentStep === 1 && (
         <Step1Assess
@@ -236,7 +233,11 @@ export default function NewAssessmentPage() {
       {currentStep === 2 && (
         <Step2WetArea
           data={step2}
+          packageUpgrades={step3.packageUpgrades}
+          glassDoor={step4.glassDoor}
           onUpdate={(u) => setStep2((prev) => ({ ...prev, ...u }))}
+          onUpdateStep3={(u) => setStep3((prev) => ({ ...prev, ...u }))}
+          onUpdateStep4={(u) => setStep4((prev) => ({ ...prev, ...u }))}
           onNext={handleNextStep}
           onPrev={() => setCurrentStep(1)}
         />
@@ -252,22 +253,13 @@ export default function NewAssessmentPage() {
       )}
 
       {currentStep === 4 && (
-        <Step4Upgrades
-          data={step4}
-          onUpdate={(u) => setStep4((prev) => ({ ...prev, ...u }))}
-          onNext={handleNextStep}
-          onPrev={() => setCurrentStep(3)}
-        />
-      )}
-
-      {currentStep === 5 && (
         <Step5Review
           step1={step1}
           step2={step2}
           step3={step3}
           step4={step4}
           onGoToStep={(s) => setCurrentStep(s)}
-          onPrev={() => setCurrentStep(4)}
+          onPrev={() => setCurrentStep(3)}
           onSubmit={handleFinalSubmit}
           onGeneratePdf={handleGeneratePdf}
           pdfUrl={pdfUrl}
