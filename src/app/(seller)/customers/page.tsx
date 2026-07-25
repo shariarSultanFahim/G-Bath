@@ -24,7 +24,7 @@ export default function SellerCustomersPage() {
       const res = await fetch(`/api/customers?search=${encodeURIComponent(search)}`);
       if (res.ok) {
         const data = await res.json();
-        setCustomers(data);
+        setCustomers(Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []);
       }
     } catch (err) {
       console.error(err);

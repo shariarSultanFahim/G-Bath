@@ -20,7 +20,26 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token =
+    (await getToken({ req, secret: process.env.NEXTAUTH_SECRET })) ||
+    (await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+      cookieName: "__Secure-authjs.session-token",
+      secureCookie: true,
+    })) ||
+    (await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+      cookieName: "authjs.session-token",
+      secureCookie: false,
+    })) ||
+    (await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+      cookieName: "next-auth.session-token",
+      secureCookie: false,
+    }));
 
   // Not logged in -> redirect to login page
   if (!token) {

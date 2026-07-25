@@ -12,9 +12,9 @@
     "node": "22.x"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 5000",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 5000",
     "analyze": "cross-env ANALYZE=true next build --webpack && open .next/analyze/nodejs.html",
     "clean": "rimraf .next",
     "format": "prettier --write .",

@@ -27,8 +27,7 @@ export default function AdminLoginPage() {
         toast.error("Invalid credentials or non-admin account");
       } else {
         toast.success("Welcome, Admin");
-        router.push("/admin");
-        router.refresh();
+        window.location.href = "/admin";
       }
     } catch {
       toast.error("An error occurred during sign in");

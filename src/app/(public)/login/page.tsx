@@ -27,8 +27,7 @@ export default function SellerLoginPage() {
         toast.error("Invalid email or password");
       } else {
         toast.success("Welcome back!");
-        router.push("/");
-        router.refresh();
+        window.location.href = "/";
       }
     } catch {
       toast.error("An error occurred during sign in");
