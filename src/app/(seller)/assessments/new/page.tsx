@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { StepIndicator } from "@/components/assessment/step-indicator";
 import { Step1Assess, Step1Data } from "@/components/assessment/step-1-assess";
 import { Step2WetArea, Step2Data } from "@/components/assessment/step-2-wet-area";
+import { StepTiledWetArea, StepTiledWetAreaData } from "@/components/assessment/step-tiled-wet-area";
 import { Step3DryArea, Step3Data } from "@/components/assessment/step-3-dry-area";
+import { StepTiledDryArea, StepTiledDryAreaData } from "@/components/assessment/step-tiled-dry-area";
 import { Step5Review, Step4Data } from "@/components/assessment/step-5-review";
 import { X } from "lucide-react";
 import { toast } from "sonner";
@@ -47,6 +49,13 @@ export default function NewAssessmentPage() {
     notes: "",
   });
 
+  const [stepTiledWet, setStepTiledWet] = useState<StepTiledWetAreaData>({
+    bathOrShower: "Bath",
+    wetAreaSize: "",
+    upgrades: [],
+    notes: "",
+  });
+
   const [step3, setStep3] = useState<Step3Data>({
     package: "Acrylic Flooring",
     vanityStyle: "Modern",
@@ -57,6 +66,19 @@ export default function NewAssessmentPage() {
     upgradeLighting: "POT Lights",
     towelBars: "Chrome",
     comments: "",
+  });
+
+  const [stepTiledDry, setStepTiledDry] = useState<StepTiledDryAreaData>({
+    flooringSelection: "No Flooring",
+    flooringNotes: "",
+    toiletSelection: "Standard Concealed Trapway",
+    vanityStyle: "Traditional",
+    vanitySize: '54"',
+    mirrorChoice: "Custom Size",
+    lightingChoice: "Wall Sconce (Pair)",
+    towelBarFinish: "Chrome",
+    upgrades: [],
+    notes: "",
   });
 
   const [step4, setStep4] = useState<Step4Data>({
@@ -91,16 +113,14 @@ export default function NewAssessmentPage() {
     if (name) setCustomerName(name);
   };
 
-  // Only advance step counter during step 1-3 without calling API
   const handleNextStep = () => {
     if (!customerId) {
       toast.error("Please select a customer first");
       return;
     }
-    setCurrentStep((prev) => Math.min(prev + 1, 4));
+    setCurrentStep((prev) => Math.min(prev + 1, 6));
   };
 
-  // Generate PDF or Save Assessment with 4 steps payload
   const createFullAssessment = async () => {
     if (!customerId) {
       toast.error("Customer missing");
@@ -112,7 +132,9 @@ export default function NewAssessmentPage() {
       customerId,
       existingBathroom: step1,
       wetArea: step2,
+      tiledWetArea: stepTiledWet,
       dryArea: step3,
+      tiledDryArea: stepTiledDry,
       upgrades: step4,
       photos: step1.photos,
     };
@@ -165,7 +187,6 @@ export default function NewAssessmentPage() {
     if (!id) return;
 
     try {
-      // Generate PDF first if not already generated
       if (!pdfUrl) {
         const pdfRes = await fetch(`/api/assessments/${id}/pdf`, { method: "POST" });
         if (pdfRes.ok) {
@@ -174,7 +195,6 @@ export default function NewAssessmentPage() {
         }
       }
 
-      // Submit assessment
       const res = await fetch(`/api/assessments/${id}/submit`, { method: "POST" });
       if (res.ok) {
         toast.success("Assessment submitted successfully!");
@@ -190,13 +210,17 @@ export default function NewAssessmentPage() {
   const getStepTitle = () => {
     switch (currentStep) {
       case 1:
-        return "Assess · Step 1 of 4";
+        return "Assess · Step 1 of 6";
       case 2:
-        return "Wet Area · Step 2 of 4";
+        return "Wet Area (Acrylic) · Step 2 of 6";
       case 3:
-        return "Dry Area · Step 3 of 4";
+        return "Tiled Wet Area · Step 3 of 6";
       case 4:
-        return "Review · Step 4 of 4";
+        return "Dry Area (Acrylic) · Step 4 of 6";
+      case 5:
+        return "Tiled Dry Area · Step 5 of 6";
+      case 6:
+        return "Review · Step 6 of 6";
       default:
         return "";
     }
@@ -215,7 +239,7 @@ export default function NewAssessmentPage() {
         </button>
       </div>
 
-      <StepIndicator currentStep={currentStep} totalSteps={4} />
+      <StepIndicator currentStep={currentStep} totalSteps={6} />
 
       {currentStep === 1 && (
         <Step1Assess
@@ -244,22 +268,42 @@ export default function NewAssessmentPage() {
       )}
 
       {currentStep === 3 && (
-        <Step3DryArea
-          data={step3}
-          onUpdate={(u) => setStep3((prev) => ({ ...prev, ...u }))}
+        <StepTiledWetArea
+          data={stepTiledWet}
+          onUpdate={(u) => setStepTiledWet((prev) => ({ ...prev, ...u }))}
           onNext={handleNextStep}
           onPrev={() => setCurrentStep(2)}
         />
       )}
 
       {currentStep === 4 && (
+        <Step3DryArea
+          data={step3}
+          onUpdate={(u) => setStep3((prev) => ({ ...prev, ...u }))}
+          onNext={handleNextStep}
+          onPrev={() => setCurrentStep(3)}
+        />
+      )}
+
+      {currentStep === 5 && (
+        <StepTiledDryArea
+          data={stepTiledDry}
+          onUpdate={(u) => setStepTiledDry((prev) => ({ ...prev, ...u }))}
+          onNext={handleNextStep}
+          onPrev={() => setCurrentStep(4)}
+        />
+      )}
+
+      {currentStep === 6 && (
         <Step5Review
           step1={step1}
           step2={step2}
+          stepTiledWet={stepTiledWet}
           step3={step3}
+          stepTiledDry={stepTiledDry}
           step4={step4}
           onGoToStep={(s) => setCurrentStep(s)}
-          onPrev={() => setCurrentStep(3)}
+          onPrev={() => setCurrentStep(5)}
           onSubmit={handleFinalSubmit}
           onGeneratePdf={handleGeneratePdf}
           pdfUrl={pdfUrl}

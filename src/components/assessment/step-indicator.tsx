@@ -5,7 +5,7 @@ interface Props {
   totalSteps?: number;
 }
 
-export function StepIndicator({ currentStep, totalSteps = 5 }: Props) {
+export function StepIndicator({ currentStep, totalSteps = 6 }: Props) {
   const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
   return (

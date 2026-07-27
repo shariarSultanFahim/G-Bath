@@ -132,5 +132,8 @@
     "shadcn",
     "framework",
     "nizam"
-  ]
+  ],
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
+  }
 }

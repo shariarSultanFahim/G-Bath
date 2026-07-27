@@ -28,7 +28,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   try {
     const body = await req.json();
-    const { existingBathroom, wetArea, dryArea, upgrades, photos, ...rest } = body;
+    const { existingBathroom, wetArea, tiledWetArea, dryArea, tiledDryArea, upgrades, photos, ...rest } = body;
 
     const dataPayload: Prisma.AssessmentUncheckedUpdateInput = { ...rest };
 
@@ -56,6 +56,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       };
     }
 
+    if (tiledWetArea) {
+      dataPayload.tiledWetArea = {
+        bathOrShower: tiledWetArea.bathOrShower || undefined,
+        wetAreaSize: tiledWetArea.wetAreaSize || undefined,
+        upgrades: Array.isArray(tiledWetArea.upgrades) ? tiledWetArea.upgrades : [],
+        notes: tiledWetArea.notes || undefined,
+      };
+    }
+
     if (dryArea) {
       dataPayload.dryArea = {
         package: dryArea.package || undefined,
@@ -67,6 +76,21 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         upgradeLighting: dryArea.upgradeLighting || undefined,
         towelBars: dryArea.towelBars || undefined,
         comments: dryArea.comments || undefined,
+      };
+    }
+
+    if (tiledDryArea) {
+      dataPayload.tiledDryArea = {
+        flooringSelection: tiledDryArea.flooringSelection || undefined,
+        flooringNotes: tiledDryArea.flooringNotes || undefined,
+        toiletSelection: tiledDryArea.toiletSelection || undefined,
+        vanityStyle: tiledDryArea.vanityStyle || undefined,
+        vanitySize: tiledDryArea.vanitySize || undefined,
+        mirrorChoice: tiledDryArea.mirrorChoice || undefined,
+        lightingChoice: tiledDryArea.lightingChoice || undefined,
+        towelBarFinish: tiledDryArea.towelBarFinish || undefined,
+        upgrades: Array.isArray(tiledDryArea.upgrades) ? tiledDryArea.upgrades : [],
+        notes: tiledDryArea.notes || undefined,
       };
     }
 

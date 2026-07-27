@@ -53,10 +53,12 @@ export interface PDFData {
   sellerEmail: string;
   sellerPhone?: string;
   dateStr: string;
-  existingBathroom: Record<string, string | undefined>;
-  wetArea: Record<string, string | undefined>;
-  dryArea: Record<string, string | undefined>;
-  upgrades: Record<string, string | undefined>;
+  existingBathroom: Record<string, string>;
+  wetArea: Record<string, string>;
+  tiledWetArea?: Record<string, any>;
+  dryArea: Record<string, any>;
+  tiledDryArea?: Record<string, any>;
+  upgrades: Record<string, string>;
   notes?: string;
   photos: string[];
 }
@@ -134,7 +136,7 @@ export function AssessmentPDFDocument({ data, logoBase64 }: { data: PDFData; log
 
         {/* Wet Area Package */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Wet Area Package</Text>
+          <Text style={styles.sectionHeader}>Wet Area Package (Acrylic)</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Bath Package:</Text>
             <Text style={styles.value}>
@@ -167,9 +169,36 @@ export function AssessmentPDFDocument({ data, logoBase64 }: { data: PDFData; log
           </View>
         </View>
 
+        {/* Tiled Wet Area Section */}
+        {data.tiledWetArea && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Tiled Wet Area</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Bath or Shower:</Text>
+              <Text style={styles.value}>{data.tiledWetArea.bathOrShower || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Wet Area Size:</Text>
+              <Text style={styles.value}>{data.tiledWetArea.wetAreaSize || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Upgrades:</Text>
+              <Text style={styles.value}>
+                {Array.isArray(data.tiledWetArea.upgrades) && data.tiledWetArea.upgrades.length > 0
+                  ? data.tiledWetArea.upgrades.join(", ")
+                  : "None"}
+              </Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Notes:</Text>
+              <Text style={styles.value}>{data.tiledWetArea.notes || "N/A"}</Text>
+            </View>
+          </View>
+        )}
+
         {/* Dry Area Package */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Dry Area Package</Text>
+          <Text style={styles.sectionHeader}>Dry Area Package (Acrylic)</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Package Selection:</Text>
             <Text style={styles.value}>{data.dryArea.package || "N/A"}</Text>
@@ -181,9 +210,9 @@ export function AssessmentPDFDocument({ data, logoBase64 }: { data: PDFData; log
             </Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Mirror & Lighting:</Text>
+            <Text style={styles.label}>Mirror / Lighting:</Text>
             <Text style={styles.value}>
-              Mirror: {data.dryArea.mirror || "-"} · Vanity Lighting: {data.dryArea.vanityLighting || "-"} · Upgrade Lighting: {data.dryArea.upgradeLighting || "-"}
+              Mirror: {data.dryArea.mirror || "N/A"} · Vanity Light: {data.dryArea.vanityLighting || "N/A"} · Upgrade Light: {data.dryArea.upgradeLighting || "N/A"}
             </Text>
           </View>
           <View style={styles.row}>
@@ -191,6 +220,53 @@ export function AssessmentPDFDocument({ data, logoBase64 }: { data: PDFData; log
             <Text style={styles.value}>{data.dryArea.towelBars || "N/A"}</Text>
           </View>
         </View>
+
+        {/* Tiled Dry Area Section */}
+        {data.tiledDryArea && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Tiled Dry Area</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Flooring Selection:</Text>
+              <Text style={styles.value}>
+                {data.tiledDryArea.flooringSelection || "N/A"} {data.tiledDryArea.flooringNotes ? `(${data.tiledDryArea.flooringNotes})` : ""}
+              </Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Toilet Selection:</Text>
+              <Text style={styles.value}>{data.tiledDryArea.toiletSelection || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Vanity Selection:</Text>
+              <Text style={styles.value}>
+                Style: {data.tiledDryArea.vanityStyle || "N/A"} · Size: {data.tiledDryArea.vanitySize || "N/A"}
+              </Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Mirror Choice:</Text>
+              <Text style={styles.value}>{data.tiledDryArea.mirrorChoice || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Lighting Choice:</Text>
+              <Text style={styles.value}>{data.tiledDryArea.lightingChoice || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Towel Bar Finish:</Text>
+              <Text style={styles.value}>{data.tiledDryArea.towelBarFinish || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Upgrades:</Text>
+              <Text style={styles.value}>
+                {Array.isArray(data.tiledDryArea.upgrades) && data.tiledDryArea.upgrades.length > 0
+                  ? data.tiledDryArea.upgrades.join(", ")
+                  : "None"}
+              </Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Notes:</Text>
+              <Text style={styles.value}>{data.tiledDryArea.notes || "N/A"}</Text>
+            </View>
+          </View>
+        )}
 
         {data.notes && (
           <View style={styles.section}>

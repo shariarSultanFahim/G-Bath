@@ -113,6 +113,26 @@ type Upgrades {
   glassDoor String?
 }
 
+type TiledWetArea {
+  bathOrShower String?
+  wetAreaSize  String?
+  upgrades     String[]
+  notes        String?
+}
+
+type TiledDryArea {
+  flooringSelection String?
+  flooringNotes     String?
+  toiletSelection   String?
+  vanityStyle       String?
+  vanitySize        String?
+  mirrorChoice      String?
+  lightingChoice    String?
+  towelBarFinish    String?
+  upgrades          String[]
+  notes             String?
+}
+
 model Assessment {
   id            String            @id @default(auto()) @map("_id") @db.ObjectId
   appointmentId String?           @db.ObjectId
@@ -130,7 +150,9 @@ model Assessment {
 
   existingBathroom ExistingBathroom?
   wetArea          WetArea?
+  tiledWetArea     TiledWetArea?
   dryArea          DryArea?
+  tiledDryArea     TiledDryArea?
   upgrades         Upgrades?
 }
 

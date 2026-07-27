@@ -7,14 +7,18 @@ export interface Step4Data {
 
 import { Step1Data } from "./step-1-assess";
 import { Step2Data } from "./step-2-wet-area";
+import { StepTiledWetAreaData } from "./step-tiled-wet-area";
 import { Step3Data } from "./step-3-dry-area";
+import { StepTiledDryAreaData } from "./step-tiled-dry-area";
 import { FileText, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
   step1: Step1Data;
   step2: Step2Data;
+  stepTiledWet: StepTiledWetAreaData;
   step3: Step3Data;
+  stepTiledDry: StepTiledDryAreaData;
   step4: Step4Data;
   onGoToStep: (step: number) => void;
   onPrev: () => void;
@@ -26,7 +30,9 @@ interface Props {
 export function Step5Review({
   step1,
   step2,
+  stepTiledWet,
   step3,
+  stepTiledDry,
   step4,
   onGoToStep,
   onPrev,
@@ -80,10 +86,10 @@ export function Step5Review({
         </div>
       </div>
 
-      {/* Section 2: Wet Area */}
+      {/* Section 2: Wet Area (Acrylic) */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Wet Area</h4>
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Wet Area (Acrylic)</h4>
           <button onClick={() => onGoToStep(2)} className="text-xs font-bold text-[#E8621A]">
             Edit
           </button>
@@ -97,11 +103,27 @@ export function Step5Review({
         </div>
       </div>
 
-      {/* Section 3: Dry Area */}
+      {/* Section 3: Tiled Wet Area */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dry Area</h4>
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tiled Wet Area</h4>
           <button onClick={() => onGoToStep(3)} className="text-xs font-bold text-[#E8621A]">
+            Edit
+          </button>
+        </div>
+        <div className="space-y-2 text-xs">
+          <div className="flex justify-between"><span className="text-slate-500">Type</span><span className="font-semibold">{stepTiledWet.bathOrShower || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Size</span><span className="font-semibold">{stepTiledWet.wetAreaSize || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Upgrades</span><span className="font-semibold">{stepTiledWet.upgrades?.join(", ") || "None"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Notes</span><span className="font-semibold">{stepTiledWet.notes || "—"}</span></div>
+        </div>
+      </div>
+
+      {/* Section 4: Dry Area (Acrylic) */}
+      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dry Area (Acrylic)</h4>
+          <button onClick={() => onGoToStep(4)} className="text-xs font-bold text-[#E8621A]">
             Edit
           </button>
         </div>
@@ -111,6 +133,25 @@ export function Step5Review({
           <div className="flex justify-between"><span className="text-slate-500">Mirror</span><span className="font-semibold">{step3.mirror || "—"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Lighting</span><span className="font-semibold">{step3.vanityLighting || "—"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Towel Bars</span><span className="font-semibold">{step3.towelBars || "—"}</span></div>
+        </div>
+      </div>
+
+      {/* Section 5: Tiled Dry Area */}
+      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tiled Dry Area</h4>
+          <button onClick={() => onGoToStep(5)} className="text-xs font-bold text-[#E8621A]">
+            Edit
+          </button>
+        </div>
+        <div className="space-y-2 text-xs">
+          <div className="flex justify-between"><span className="text-slate-500">Flooring</span><span className="font-semibold">{stepTiledDry.flooringSelection || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Toilet</span><span className="font-semibold">{stepTiledDry.toiletSelection || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Vanity</span><span className="font-semibold">{stepTiledDry.vanityStyle ? `${stepTiledDry.vanityStyle} (${stepTiledDry.vanitySize || ""})` : "—"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Mirror</span><span className="font-semibold">{stepTiledDry.mirrorChoice || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Lighting</span><span className="font-semibold">{stepTiledDry.lightingChoice || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Towel Bar Finish</span><span className="font-semibold">{stepTiledDry.towelBarFinish || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Upgrades</span><span className="font-semibold">{stepTiledDry.upgrades?.join(", ") || "None"}</span></div>
         </div>
       </div>
 

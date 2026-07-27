@@ -63,7 +63,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { appointmentId, customerId, existingBathroom, wetArea, dryArea, upgrades, photos } = body;
+    const { appointmentId, customerId, existingBathroom, wetArea, tiledWetArea, dryArea, tiledDryArea, upgrades, photos } = body;
 
     if (!customerId) {
       return NextResponse.json({ error: "Customer is required" }, { status: 400 });
@@ -101,6 +101,15 @@ export async function POST(req: Request) {
         }
       : undefined;
 
+    const cleanTiledWetArea = tiledWetArea
+      ? {
+          bathOrShower: tiledWetArea.bathOrShower || undefined,
+          wetAreaSize: tiledWetArea.wetAreaSize || undefined,
+          upgrades: Array.isArray(tiledWetArea.upgrades) ? tiledWetArea.upgrades : [],
+          notes: tiledWetArea.notes || undefined,
+        }
+      : undefined;
+
     const cleanDryArea = dryArea
       ? {
           package: dryArea.package || undefined,
@@ -112,6 +121,21 @@ export async function POST(req: Request) {
           upgradeLighting: dryArea.upgradeLighting || undefined,
           towelBars: dryArea.towelBars || undefined,
           comments: dryArea.comments || undefined,
+        }
+      : undefined;
+
+    const cleanTiledDryArea = tiledDryArea
+      ? {
+          flooringSelection: tiledDryArea.flooringSelection || undefined,
+          flooringNotes: tiledDryArea.flooringNotes || undefined,
+          toiletSelection: tiledDryArea.toiletSelection || undefined,
+          vanityStyle: tiledDryArea.vanityStyle || undefined,
+          vanitySize: tiledDryArea.vanitySize || undefined,
+          mirrorChoice: tiledDryArea.mirrorChoice || undefined,
+          lightingChoice: tiledDryArea.lightingChoice || undefined,
+          towelBarFinish: tiledDryArea.towelBarFinish || undefined,
+          upgrades: Array.isArray(tiledDryArea.upgrades) ? tiledDryArea.upgrades : [],
+          notes: tiledDryArea.notes || undefined,
         }
       : undefined;
 
@@ -133,7 +157,9 @@ export async function POST(req: Request) {
       salespersonId: user.id,
       existingBathroom: cleanExistingBathroom,
       wetArea: cleanWetArea,
+      tiledWetArea: cleanTiledWetArea,
       dryArea: cleanDryArea,
+      tiledDryArea: cleanTiledDryArea,
       upgrades: cleanUpgrades,
       photos: allPhotos,
       status: "DRAFT",

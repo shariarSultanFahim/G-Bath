@@ -25,7 +25,9 @@ export default function AdminAssessmentDetailPage({ params }: { params: Promise<
 
   const ex = assessment.existingBathroom || {};
   const wet = assessment.wetArea || {};
+  const tiledWet = assessment.tiledWetArea || {};
   const dry = assessment.dryArea || {};
+  const tiledDry = assessment.tiledDryArea || {};
   const up = assessment.upgrades || {};
 
   return (
@@ -80,7 +82,7 @@ export default function AdminAssessmentDetailPage({ params }: { params: Promise<
           <Card>
             <CardHeader className="pb-3 border-b border-border">
               <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                WET AREA
+                WET AREA (ACRYLIC)
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 grid grid-cols-2 gap-y-3 gap-x-6 text-xs">
@@ -90,11 +92,26 @@ export default function AdminAssessmentDetailPage({ params }: { params: Promise<
             </CardContent>
           </Card>
 
+          {/* Tiled Wet Area Section */}
+          <Card>
+            <CardHeader className="pb-3 border-b border-border">
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                TILED WET AREA
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 grid grid-cols-2 gap-y-3 gap-x-6 text-xs">
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">TYPE</span><span className="font-semibold text-foreground">{tiledWet.bathOrShower || "—"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">WET AREA SIZE</span><span className="font-semibold text-foreground">{tiledWet.wetAreaSize || "—"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">UPGRADES</span><span className="font-semibold text-foreground">{tiledWet.upgrades?.join(", ") || "None"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">NOTES</span><span className="font-semibold text-foreground">{tiledWet.notes || "—"}</span></div>
+            </CardContent>
+          </Card>
+
           {/* Dry Area Section */}
           <Card>
             <CardHeader className="pb-3 border-b border-border">
               <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                DRY AREA
+                DRY AREA (ACRYLIC)
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 grid grid-cols-2 gap-y-3 gap-x-6 text-xs">
@@ -105,6 +122,26 @@ export default function AdminAssessmentDetailPage({ params }: { params: Promise<
               <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">UPGRADE LIGHTING</span><span className="font-semibold text-foreground">{dry.upgradeLighting || "—"}</span></div>
               <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">TOWEL BARS</span><span className="font-semibold text-foreground">{dry.towelBars || "—"}</span></div>
               <div className="col-span-2"><span className="text-muted-foreground block text-[10px] uppercase font-bold">COMMENTS</span><span className="font-semibold text-foreground">{dry.comments || "—"}</span></div>
+            </CardContent>
+          </Card>
+
+          {/* Tiled Dry Area Section */}
+          <Card>
+            <CardHeader className="pb-3 border-b border-border">
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                TILED DRY AREA
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 grid grid-cols-2 gap-y-3 gap-x-6 text-xs">
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">FLOORING SELECTION</span><span className="font-semibold text-foreground">{tiledDry.flooringSelection || "—"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">FLOORING NOTES</span><span className="font-semibold text-foreground">{tiledDry.flooringNotes || "—"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">TOILET SELECTION</span><span className="font-semibold text-foreground">{tiledDry.toiletSelection || "—"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">VANITY</span><span className="font-semibold text-foreground">{tiledDry.vanityStyle ? `${tiledDry.vanityStyle} (${tiledDry.vanitySize || ""})` : "—"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">MIRROR CHOICE</span><span className="font-semibold text-foreground">{tiledDry.mirrorChoice || "—"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">LIGHTING CHOICE</span><span className="font-semibold text-foreground">{tiledDry.lightingChoice || "—"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">TOWEL BAR FINISH</span><span className="font-semibold text-foreground">{tiledDry.towelBarFinish || "—"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">UPGRADES</span><span className="font-semibold text-foreground">{tiledDry.upgrades?.join(", ") || "None"}</span></div>
+              <div className="col-span-2"><span className="text-muted-foreground block text-[10px] uppercase font-bold">NOTES</span><span className="font-semibold text-foreground">{tiledDry.notes || "—"}</span></div>
             </CardContent>
           </Card>
 
