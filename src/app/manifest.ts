@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Good Bathroom Renos",
     short_name: "G-Bath",
-    description: "Good Bathroom Renos Salesperson Assessment PWA",
+    description: "Good Bathroom Renos Salesperson Assessment PWA.",
     start_url: "/",
     display: "standalone",
     display_override: ["standalone", "minimal-ui"],
