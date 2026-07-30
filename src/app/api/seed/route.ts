@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { Role, Status } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 export async function GET(req: Request) {
@@ -23,8 +24,8 @@ export async function GET(req: Request) {
         email: "goodbathroomrenos@gmail.com",
         passwordHash: adminPassword,
         phone: "021 555 9999",
-        role: "ADMIN",
-        status: "ACTIVE",
+        role: Role.ADMIN,
+        status: Status.ACTIVE,
       },
     });
 
@@ -36,8 +37,8 @@ export async function GET(req: Request) {
         email: "alex@gbath.com",
         passwordHash: sellerPassword,
         phone: "021 555 1001",
-        role: "SELLER",
-        status: "ACTIVE",
+        role: Role.SELLER,
+        status: Status.ACTIVE,
       },
     });
 
@@ -48,6 +49,7 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("Seed error:", error);
-    return NextResponse.json({ error: "Failed to seed database" }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: "Failed to seed database", details: errorMessage }, { status: 500 });
   }
 }
