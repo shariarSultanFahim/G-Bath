@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth-utils";
-import { sendAssessmentNotification } from "@/lib/email";
 import { notificationEmitter } from "@/lib/notifications-stream";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -31,13 +30,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         data: { status: "COMPLETED" },
       });
     }
-
-    // Send email notification to admin
-    await sendAssessmentNotification({
-      customerName: assessment.customer.name,
-      salespersonName: assessment.salesperson.name,
-      assessmentId: assessment.id,
-    });
 
     // Create & Broadcast real-time notification for ADMIN
     const notif = await db.notification.create({
