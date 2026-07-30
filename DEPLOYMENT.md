@@ -344,11 +344,12 @@ After the first deployment, you need to push the Prisma schema and seed the admi
 # On VPS
 cd /var/www/g-bath
 
-# Push Prisma schema to MongoDB
-docker exec -it gbath-app npx prisma db push
+# Push Prisma schema to MongoDB (pinning v6 + skipping generate in production container)
+docker exec -it gbath-app npx prisma@6.4.0 db push --skip-generate
 
-# Run the seed script (creates initial admin account)
-docker exec -it gbath-app npx tsx prisma/seed.ts
+# Seed database (creates initial admin & seller users)
+# Pass your NEXTAUTH_SECRET as the key query parameter:
+curl "http://localhost:5000/api/seed?key=YOUR_NEXTAUTH_SECRET"
 ```
 
 ---
