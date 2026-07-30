@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Camera, Upload, UserCheck } from "lucide-react";
+import { Camera, Upload, UserCheck, X } from "lucide-react";
 import { toast } from "sonner";
 
 export interface Step1Data {
@@ -89,7 +89,14 @@ export function Step1Assess({
       toast.error("Upload error");
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
+  };
+
+  const handleRemovePhoto = (indexToRemove: number) => {
+    const updated = (data.photos || []).filter((_, i) => i !== indexToRemove);
+    onUpdate({ photos: updated });
+    toast.info("Photo removed");
   };
 
   const handleNextClick = () => {
@@ -310,7 +317,22 @@ export function Step1Assess({
         {data.photos && data.photos.length > 0 && (
           <div className="grid grid-cols-3 gap-2 pt-2">
             {data.photos.map((url, i) => (
-              <img key={i} src={url} alt="Bathroom photo" className="h-20 w-full rounded-xl object-cover border border-slate-200" />
+              <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 aspect-square">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt={`Bathroom photo ${i + 1}`}
+                  className="h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemovePhoto(i)}
+                  className="absolute top-1 right-1 bg-slate-900/70 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                  title="Remove photo"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
             ))}
           </div>
         )}
