@@ -31,6 +31,7 @@ services:
     image: mongo:7.0
     container_name: gbath-mongodb
     restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - mongodb_data:/data/db
     ports:
@@ -40,11 +41,16 @@ services:
     networks:
       - gbath-network
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
+      test: ["CMD", "mongosh", "--eval", "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] }).ok }"]
+      interval: 5s
       timeout: 5s
-      retries: 5
-      start_period: 10s
+      retries: 10
+      start_period: 2s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
 
 networks:
   gbath-network:

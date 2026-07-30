@@ -273,8 +273,8 @@ EOF
 NEXT_PUBLIC_SITE_URL=https://app.goodbathroomrenos.ca
 NEXT_PUBLIC_API_URL=https://app.goodbathroomrenos.ca
 
-# Database — points to the MongoDB Docker container by service name
-DATABASE_URL="mongodb://mongodb:27017/g-bath?directConnection=true"
+# Database Connection (Uses local MongoDB container configured as replica set rs0)
+DATABASE_URL="mongodb://mongodb:27017/g-bath?replicaSet=rs0&directConnection=true"
 
 # NextAuth
 NEXTAUTH_SECRET="GENERATE_A_STRONG_RANDOM_SECRET_HERE"
