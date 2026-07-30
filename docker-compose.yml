@@ -1,0 +1,66 @@
+services:
+  # ===== Next.js Application =====
+  app:
+    image: ghcr.io/shariarsultanfahim/g-bath:latest
+    container_name: gbath-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - uploads_data:/app/public/uploads
+    networks:
+      - gbath-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1024M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  # ===== MongoDB Database =====
+  mongodb:
+    image: mongo:7.0
+    container_name: gbath-mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "127.0.0.1:27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: g-bath
+    networks:
+      - gbath-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+networks:
+  gbath-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  uploads_data:
+    driver: local
