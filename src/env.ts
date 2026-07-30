@@ -3,8 +3,8 @@ import { z } from "zod";
 
 export const env = createEnv({
   client: {
-    NEXT_PUBLIC_SITE_URL: z.string().url(),
-    NEXT_PUBLIC_API_URL: z.string().url(),
+    NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:5000"),
+    NEXT_PUBLIC_API_URL: z.string().url().default("http://localhost:5000"),
     NEXT_PUBLIC_GA_ID: z.string().optional()
   },
   runtimeEnv: {

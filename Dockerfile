@@ -20,8 +20,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Build-time environment variables for Next.js client bundle compilation
+ARG NEXT_PUBLIC_SITE_URL="http://localhost:5000"
+ARG NEXT_PUBLIC_API_URL="http://localhost:5000"
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Disable Next.js telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
