@@ -2,6 +2,7 @@
 
 > **Target Domain:** `https://app.goodbathroomrenos.ca`
 > **VPS Provider:** Hostinger (Ubuntu 22.04 / 24.04 LTS)
+> **VPS IP:** `187.127.249.101`
 
 ---
 
@@ -44,7 +45,7 @@
 
 Run these once on a fresh VPS (details in the sections below):
 
-1. DNS — A record `app` → VPS IP; confirm `ping app.goodbathroomrenos.ca`
+1. DNS — In Wix: delete `app` CNAME → add `A` record `app` → `187.127.249.101`; confirm lookup is that IP (not Wix CDN)
 2. VPS — Ubuntu update, UFW (22/80/443), Docker Engine + Compose plugin
 3. Nginx — Install nginx + certbot; copy `nginx/app.goodbathroomrenos.ca.conf` to `sites-available`, enable site (HTTP proxy first)
 4. Start app containers (CI deploy or manual compose under `/var/www/g-bath`)
@@ -57,17 +58,32 @@ Run these once on a fresh VPS (details in the sections below):
 
 ## 1. DNS Setup
 
-Go to your domain DNS manager and create an **A record**:
+DNS for `goodbathroomrenos.ca` is managed on **Wix** (`ns10.wixdns.net` / `ns11.wixdns.net`).
+
+**Current state (before cutover):** `app.goodbathroomrenos.ca` is a **CNAME** → `cdn1.wixdns.net` (Wix). That must be removed — you cannot keep a CNAME on `app` and also point it at your VPS.
+
+### Cut over `app` to the VPS
+
+In the Wix DNS / Domains panel for `goodbathroomrenos.ca`:
+
+1. **Delete** the existing `CNAME` record for host `app` (value `cdn1.wixdns.net`).
+2. **Add** an `A` record:
 
 | Type | Host | Value | TTL |
 |---|---|---|---|
-| `A` | `app` | `YOUR_VPS_IP_ADDRESS` | 3600 |
+| `A` | `app` | `187.127.249.101` | 3600 |
 
-Wait for DNS propagation (5–30 minutes), then verify:
+Leave the apex (`goodbathroomrenos.ca`) A/MX/TXT records alone if the main marketing site stays on Wix. Only `app` moves to the Hostinger VPS.
+
+Wait for propagation (often 5–60 minutes with Wix TTL ~1h), then verify:
 
 ```bash
+# Should resolve to 187.127.249.101 — not 34.149.x.x / Wix CDN
+nslookup app.goodbathroomrenos.ca
 ping app.goodbathroomrenos.ca
 ```
+
+Do **not** run Certbot until this lookup shows `187.127.249.101`.
 
 ---
 
@@ -76,7 +92,7 @@ ping app.goodbathroomrenos.ca
 SSH into your Hostinger VPS:
 
 ```bash
-ssh root@YOUR_VPS_IP_ADDRESS
+ssh root@187.127.249.101
 ```
 
 ### Update system packages
