@@ -8,7 +8,7 @@
 ## Architecture at a Glance
 
 ```
-┌──────────────┐       ┌──────────────┐       ┌──────────────────┐
+┌──────────────┐       ┌──────────────┐        ┌──────────────────┐
 │   Browser    │──443──│    Nginx     │──5000──│  Next.js App     │
 │              │       │  (SSL/gzip)  │        │  (Docker)        │
 └──────────────┘       └──────────────┘        └──────┬───────────┘
@@ -39,6 +39,19 @@
 7. [Database Seeding](#7-database-seeding)
 8. [How the CI/CD Pipeline Works](#8-how-the-cicd-pipeline-works)
 9. [Maintenance & Troubleshooting](#9-maintenance--troubleshooting)
+
+### Go-live checklist
+
+Run these once on a fresh VPS (details in the sections below):
+
+1. DNS — A record `app` → VPS IP; confirm `ping app.goodbathroomrenos.ca`
+2. VPS — Ubuntu update, UFW (22/80/443), Docker Engine + Compose plugin
+3. Nginx — Install nginx + certbot; copy `nginx/app.goodbathroomrenos.ca.conf` to `sites-available`, enable site (HTTP proxy first)
+4. Start app containers (CI deploy or manual compose under `/var/www/g-bath`)
+5. SSL — `certbot --nginx -d app.goodbathroomrenos.ca`
+6. GitHub secrets — `VPS_HOST`, `VPS_USERNAME`, `VPS_SSH_KEY`, `VPS_PORT`, `GHCR_PAT`, `ENV_FILE` (from `.env.production.example`)
+7. Deploy — push to `main` or `workflow_dispatch`
+8. DB — `prisma db push` + seed via `/api/seed` (section 7)
 
 ---
 
@@ -267,7 +280,7 @@ EOF
 |---|---|
 | `ENV_FILE` | The entire production `.env` file content |
 
-**Copy-paste this as the value of `ENV_FILE`**, replacing the placeholders:
+Use [`.env.production.example`](.env.production.example) as the template. **Copy-paste it as the value of `ENV_FILE`**, replacing the placeholders:
 
 ```env
 NEXT_PUBLIC_SITE_URL=https://app.goodbathroomrenos.ca
@@ -285,6 +298,8 @@ AUTH_TRUST_HOST=true
 > 💡 Generate a strong secret with: `openssl rand -base64 32`
 
 > ⚠️ **Important:** The `DATABASE_URL` uses `mongodb` (the Docker service name) as the hostname — not `127.0.0.1` or `localhost`. Docker Compose networking resolves the service name to the container's internal IP automatically.
+
+> ⚠️ **Build-time note:** `NEXT_PUBLIC_*` values are also passed as Docker **build-args** in `.github/workflows/deploy.yml` so the client bundle is compiled for `https://app.goodbathroomrenos.ca`. Runtime `.env` alone does not rewrite those baked-in URLs — change the workflow build-args if the domain changes.
 
 ---
 
@@ -375,7 +390,8 @@ curl "http://localhost:5000/api/seed?key=YOUR_NEXTAUTH_SECRET"
 
 - **Trigger:** Every push to `main` branch, or manually via "Run workflow" button
 - **Docker image tags:** `latest` + git SHA (e.g., `abc1234`)
-- **`.env` on VPS:** Written fresh from the `ENV_FILE` secret on every deploy — update the secret in GitHub to change env vars, no SSH needed
+- **Build-args:** `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_API_URL` are set to `https://app.goodbathroomrenos.ca` during the image build
+- **`.env` on VPS:** Written fresh from the `ENV_FILE` secret on every deploy — update the secret in GitHub to change env vars, no SSH needed (see `.env.production.example`)
 - **Zero-downtime:** Docker Compose pulls the new image and restarts the app container; MongoDB stays running with its persistent volume
 
 ---

@@ -69,6 +69,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=https://app.goodbathroomrenos.ca
+            NEXT_PUBLIC_API_URL=https://app.goodbathroomrenos.ca
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
