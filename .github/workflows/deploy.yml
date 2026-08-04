@@ -94,12 +94,13 @@ jobs:
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GHCR_USER: ${{ github.repository_owner }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          envs: ENV_FILE,GHCR_PAT
+          envs: ENV_FILE,GHCR_PAT,GHCR_USER
           script: |
             set -euo pipefail
             echo "===== Starting deployment ====="
@@ -107,10 +108,21 @@ jobs:
             mkdir -p /var/www/g-bath
             cd /var/www/g-bath
 
+            if [ -z "${ENV_FILE:-}" ]; then
+              echo "ERROR: ENV_FILE secret is empty"
+              exit 1
+            fi
+            if [ -z "${GHCR_PAT:-}" ]; then
+              echo "ERROR: GHCR_PAT secret is empty — create a classic PAT with read:packages"
+              exit 1
+            fi
+
             printf '%s\n' "$ENV_FILE" > .env
             chmod 600 .env
 
-            echo "$GHCR_PAT" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+            # Trim whitespace/newlines that break docker login
+            GHCR_PAT_TRIMMED="$(printf '%s' "$GHCR_PAT" | tr -d '\r\n')"
+            echo "$GHCR_PAT_TRIMMED" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
             docker compose pull app
             docker compose up -d --remove-orphans
