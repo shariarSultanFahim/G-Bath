@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 # Manual deploy on the VPS (build locally, no GHCR).
-# Prerequisites: repo cloned to /var/www/g-bath OR copy Dockerfile + compose + .env there.
-# Usage: cd /var/www/g-bath && bash scripts/deploy-manual.sh
+# Usage (from anywhere in the repo):
+#   bash scripts/deploy-manual.sh
+# Or override:
+#   APP_DIR=/var/www/G-Bath bash scripts/deploy-manual.sh
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/var/www/g-bath}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_DIR="${APP_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 cd "${APP_DIR}"
+
+echo "==> Deploying from ${APP_DIR}"
 
 if [[ ! -f .env ]]; then
   echo "Missing ${APP_DIR}/.env — copy from .env.production.example and fill secrets."

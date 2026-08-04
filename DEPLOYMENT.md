@@ -186,22 +186,26 @@ Pipeline: typecheck → Docker build/push → SSH write `.env` + compose → `do
 ### Manual on VPS
 
 ```bash
-mkdir -p /var/www/g-bath && cd /var/www/g-bath
-# Copy Dockerfile, docker-compose.local.yml, prisma/, src/, package files, etc.
-# Or: git clone <repo-url> .
+git clone <repo-url> /var/www/G-Bath
+cd /var/www/G-Bath
 
-nano .env   # from .env.production.example
+cp .env.production.example .env
+nano .env   # fill NEXTAUTH_SECRET and confirm URLs
+
 bash scripts/deploy-manual.sh
 ```
+
+> CI/CD and manual deploys both use `/var/www/G-Bath`.
 
 ---
 
 ## 7. Database Seeding
 
 ```bash
-cd /var/www/g-bath
+cd /var/www/G-Bath
 
-docker exec -it gbath-app npx prisma db push --skip-generate
+# Must pin Prisma 6 — bare `npx prisma` installs v7 and breaks this schema
+docker exec -it gbath-app npx prisma@6.4.0 db push --skip-generate
 
 # Seed admin/seller (key = your NEXTAUTH_SECRET)
 curl "http://127.0.0.1:5000/api/seed?key=YOUR_NEXTAUTH_SECRET"
@@ -217,7 +221,7 @@ push main → typecheck → build image (SITE_URL baked) → push ghcr.io/.../g-
 ```
 
 - Image: `ghcr.io/shariarsultanfahim/g-bath:latest` (+ git SHA tag)
-- App dir on VPS: `/var/www/g-bath`
+- App dir on VPS: `/var/www/G-Bath`
 - MongoDB volume survives app restarts
 
 ---
@@ -225,7 +229,7 @@ push main → typecheck → build image (SITE_URL baked) → push ghcr.io/.../g-
 ## 9. Maintenance
 
 ```bash
-cd /var/www/g-bath
+cd /var/www/G-Bath
 docker compose logs -f app
 docker compose restart app
 docker compose ps
@@ -240,7 +244,7 @@ docker cp ~/backups/backup.gz gbath-mongodb:/data/db/
 docker exec gbath-mongodb mongorestore --db g-bath --archive=/data/db/backup.gz --gzip --drop
 ```
 
-Update env: edit `ENV_FILE` secret → re-run workflow (or edit `/var/www/g-bath/.env` and `docker compose up -d`).
+Update env: edit `ENV_FILE` secret → re-run workflow (or edit `/var/www/G-Bath/.env` and `docker compose up -d`).
 
 ---
 

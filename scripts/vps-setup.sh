@@ -4,7 +4,7 @@
 set -euo pipefail
 
 DOMAIN="goodbathroomrenosapp.ca"
-APP_DIR="/var/www/g-bath"
+APP_DIR="${APP_DIR:-/var/www/G-Bath}"
 TIMEZONE="${TIMEZONE:-America/Toronto}"
 
 echo "==> Updating system packages"
@@ -52,5 +52,5 @@ echo "  2. Copy nginx/${DOMAIN}.conf → /etc/nginx/sites-available/${DOMAIN}"
 echo "  3. Enable site, reload nginx"
 echo "  4. Add GitHub secrets and push to main (or run docker compose manually)"
 echo "  5. After app is up: certbot --nginx -d ${DOMAIN} -d www.${DOMAIN}"
-echo "  6. Seed DB: docker exec gbath-app npx prisma db push --skip-generate"
+echo "  6. Seed DB: docker exec gbath-app npx prisma@6.4.0 db push --skip-generate"
 echo "             curl \"http://127.0.0.1:5000/api/seed?key=\$NEXTAUTH_SECRET\""
