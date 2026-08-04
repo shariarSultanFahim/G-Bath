@@ -1,5 +1,5 @@
 # docker-compose.local.yml
-# For manual deployment — builds from Dockerfile locally on the VPS.
+# Build & run on the VPS without GHCR (manual / first boot).
 # Usage: docker compose -f docker-compose.local.yml up -d --build
 
 services:
@@ -7,10 +7,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: https://goodbathroomrenosapp.ca
+        NEXT_PUBLIC_API_URL: https://goodbathroomrenosapp.ca
     container_name: gbath-app
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     env_file:
       - .env
     volumes:

@@ -26,10 +26,9 @@ ARG NEXT_PUBLIC_API_URL="http://localhost:5000"
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-# Disable Next.js telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build the standalone application
+RUN npx prisma generate
 RUN npm run build
 
 # ============================================
@@ -44,16 +43,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=5000
 ENV HOSTNAME="0.0.0.0"
 
-# Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy built application from builder stage
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Create uploads directory with correct ownership
+# Schema only — use `npx prisma@6.4.0 db push --skip-generate` for migrations on VPS
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+
 RUN mkdir -p ./public/uploads && chown -R nextjs:nodejs ./public/uploads
 
 USER nextjs
