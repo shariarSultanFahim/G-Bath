@@ -45,43 +45,64 @@ export default function NewAssessmentPage() {
     bathDetails: "",
     includeShower: false,
     showerDetails: "",
+    includeAcrylicTilePanel: true,
     acrylicTilePanel: "Acrylic Carrera Marble",
     notes: "",
   });
 
   const [stepTiledWet, setStepTiledWet] = useState<StepTiledWetAreaData>({
+    includeBathOrShower: true,
     bathOrShower: "Bath",
     wetAreaSize: "",
+    bathOrShowerNotes: "",
+    includeUpgrades: true,
     upgrades: [],
+    upgradesNotes: "",
     notes: "",
   });
 
   const [step3, setStep3] = useState<Step3Data>({
+    includePackage: true,
     package: "Acrylic Flooring",
+    packageNotes: "",
+    includeVanity: true,
     vanityStyle: "Modern",
     vanityDetails: "",
+    vanityNotes: "",
     packageUpgrades: [],
+    includeMirrorLighting: true,
     mirror: "LED",
     vanityLighting: "LED",
     upgradeLighting: "POT Lights",
     towelBars: "Chrome",
+    mirrorLightingNotes: "",
     comments: "",
   });
 
   const [stepTiledDry, setStepTiledDry] = useState<StepTiledDryAreaData>({
+    includeFlooring: true,
     flooringSelection: "No Flooring",
     flooringNotes: "",
+    includeToilet: true,
     toiletSelection: "Standard Concealed Trapway",
+    toiletNotes: "",
+    includeVanity: true,
     vanityStyle: "Traditional",
     vanitySize: '54"',
+    vanityNotes: "",
+    includeMirrorLighting: true,
     mirrorChoice: "Custom Size",
     lightingChoice: "Wall Sconce (Pair)",
     towelBarFinish: "Chrome",
+    mirrorLightingNotes: "",
+    includeUpgrades: true,
     upgrades: [],
+    upgradesNotes: "",
     notes: "",
   });
 
   const [step4, setStep4] = useState<Step4Data>({
+    includeGlassDoor: true,
     glassDoor: "Hinged Pivot Door",
   });
 
@@ -214,9 +235,9 @@ export default function NewAssessmentPage() {
       case 2:
         return "Wet Area (Acrylic) · Step 2 of 6";
       case 3:
-        return "Tiled Wet Area · Step 3 of 6";
+        return "Dry Area (Acrylic) · Step 3 of 6";
       case 4:
-        return "Dry Area (Acrylic) · Step 4 of 6";
+        return "Tiled Wet Area · Step 4 of 6";
       case 5:
         return "Tiled Dry Area · Step 5 of 6";
       case 6:
@@ -259,6 +280,7 @@ export default function NewAssessmentPage() {
           data={step2}
           packageUpgrades={step3.packageUpgrades}
           glassDoor={step4.glassDoor}
+          includeGlassDoor={step4.includeGlassDoor}
           onUpdate={(u) => setStep2((prev) => ({ ...prev, ...u }))}
           onUpdateStep3={(u) => setStep3((prev) => ({ ...prev, ...u }))}
           onUpdateStep4={(u) => setStep4((prev) => ({ ...prev, ...u }))}
@@ -268,18 +290,18 @@ export default function NewAssessmentPage() {
       )}
 
       {currentStep === 3 && (
-        <StepTiledWetArea
-          data={stepTiledWet}
-          onUpdate={(u) => setStepTiledWet((prev) => ({ ...prev, ...u }))}
+        <Step3DryArea
+          data={step3}
+          onUpdate={(u) => setStep3((prev) => ({ ...prev, ...u }))}
           onNext={handleNextStep}
           onPrev={() => setCurrentStep(2)}
         />
       )}
 
       {currentStep === 4 && (
-        <Step3DryArea
-          data={step3}
-          onUpdate={(u) => setStep3((prev) => ({ ...prev, ...u }))}
+        <StepTiledWetArea
+          data={stepTiledWet}
+          onUpdate={(u) => setStepTiledWet((prev) => ({ ...prev, ...u }))}
           onNext={handleNextStep}
           onPrev={() => setCurrentStep(3)}
         />

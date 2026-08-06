@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 export interface Step4Data {
+  includeGlassDoor: boolean;
   glassDoor: string;
 }
 
@@ -97,8 +98,12 @@ export function Step5Review({
         <div className="space-y-2 text-xs">
           <div className="flex justify-between"><span className="text-slate-500">Bath</span><span className="font-semibold">{step2.includeBath ? `Yes - ${step2.bathDetails || ""}` : "No"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Shower</span><span className="font-semibold">{step2.includeShower ? `Yes - ${step2.showerDetails || ""}` : "No"}</span></div>
-          <div className="flex justify-between"><span className="text-slate-500">Glass Door</span><span className="font-semibold">{step4.glassDoor || "—"}</span></div>
-          <div className="flex justify-between"><span className="text-slate-500">Acrylic Panel</span><span className="font-semibold">{step2.acrylicTilePanel || "—"}</span></div>
+          {step4.includeGlassDoor !== false && (
+            <div className="flex justify-between"><span className="text-slate-500">Glass Door</span><span className="font-semibold">{step4.glassDoor || "—"}</span></div>
+          )}
+          {step2.includeAcrylicTilePanel !== false && (
+            <div className="flex justify-between"><span className="text-slate-500">Acrylic Panel</span><span className="font-semibold">{step2.acrylicTilePanel || "—"}</span></div>
+          )}
           <div className="flex justify-between"><span className="text-slate-500">Package Upgrades</span><span className="font-semibold">{step3.packageUpgrades?.join(", ") || "None"}</span></div>
         </div>
       </div>

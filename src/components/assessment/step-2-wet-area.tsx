@@ -2,12 +2,14 @@
 
 import { Step3Data } from "./step-3-dry-area";
 import { Step4Data } from "./step-5-review";
+import { Switch } from "@/components/ui/switch";
 
 export interface Step2Data {
   includeBath: boolean;
   bathDetails: string;
   includeShower: boolean;
   showerDetails: string;
+  includeAcrylicTilePanel: boolean;
   acrylicTilePanel: string;
   notes: string;
 }
@@ -16,6 +18,7 @@ interface Props {
   data: Step2Data;
   packageUpgrades?: string[];
   glassDoor?: string;
+  includeGlassDoor?: boolean;
   onUpdate: (data: Partial<Step2Data>) => void;
   onUpdateStep3: (data: Partial<Step3Data>) => void;
   onUpdateStep4: (data: Partial<Step4Data>) => void;
@@ -51,6 +54,7 @@ export function Step2WetArea({
   data,
   packageUpgrades = [],
   glassDoor = "",
+  includeGlassDoor = true,
   onUpdate,
   onUpdateStep3,
   onUpdateStep4,
@@ -66,25 +70,42 @@ export function Step2WetArea({
     }
   };
 
+  const toggleGlassDoor = (door: string) => {
+    const currentList = glassDoor ? glassDoor.split(", ").filter(Boolean) : [];
+    let newList: string[];
+    if (currentList.includes(door)) {
+      newList = currentList.filter((d) => d !== door);
+    } else {
+      newList = [...currentList, door];
+    }
+    onUpdateStep4({ glassDoor: newList.join(", ") });
+  };
+
+  const toggleAcrylicPanel = (panel: string) => {
+    const currentList = data.acrylicTilePanel ? data.acrylicTilePanel.split(", ").filter(Boolean) : [];
+    let newList: string[];
+    if (currentList.includes(panel)) {
+      newList = currentList.filter((p) => p !== panel);
+    } else {
+      newList = [...currentList, panel];
+    }
+    onUpdate({ acrylicTilePanel: newList.join(", ") });
+  };
+
   return (
     <div className="space-y-5">
       {/* Wet Area Package */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-4">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Wet Area Package</h3>
+        <h3 className="text-xs font-bold text-slate-900">Wet Area Package</h3>
 
         {/* Bath Section */}
         <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 space-y-2">
-          <label className="flex items-center gap-2 text-sm font-bold text-slate-900 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={data.includeBath}
-              onChange={(e) => onUpdate({ includeBath: e.target.checked })}
-              className="h-4 w-4 rounded accent-[#E8621A]"
-            />
-            Include Bath
-          </label>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-bold text-slate-900">Include Bath</h4>
+            <Switch checked={data.includeBath} onCheckedChange={(c) => onUpdate({ includeBath: c })} />
+          </div>
 
-          {data.includeBath && (
+          <div className={`transition-opacity ${!data.includeBath ? 'opacity-40 pointer-events-none' : ''}`}>
             <input
               type="text"
               value={data.bathDetails}
@@ -92,22 +113,17 @@ export function Step2WetArea({
               placeholder="Bath details..."
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
             />
-          )}
+          </div>
         </div>
 
         {/* Shower Section */}
         <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 space-y-2">
-          <label className="flex items-center gap-2 text-sm font-bold text-slate-900 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={data.includeShower}
-              onChange={(e) => onUpdate({ includeShower: e.target.checked })}
-              className="h-4 w-4 rounded accent-[#E8621A]"
-            />
-            Include Shower
-          </label>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-bold text-slate-900">Include Shower</h4>
+            <Switch checked={data.includeShower} onCheckedChange={(c) => onUpdate({ includeShower: c })} />
+          </div>
 
-          {data.includeShower && (
+          <div className={`transition-opacity ${!data.includeShower ? 'opacity-40 pointer-events-none' : ''}`}>
             <input
               type="text"
               value={data.showerDetails}
@@ -115,78 +131,96 @@ export function Step2WetArea({
               placeholder="Shower details..."
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
             />
-          )}
+          </div>
         </div>
       </div>
 
       {/* Glass Door (under Wet Area Package) */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Glass Door</h3>
-        <div className="space-y-3 pt-1">
-          {GLASS_DOOR_OPTIONS.map((door) => (
-            <label key={door} className="flex items-center gap-3 text-sm font-medium text-slate-800 cursor-pointer">
-              <input
-                type="radio"
-                name="glassDoor"
-                value={door}
-                checked={glassDoor === door}
-                onChange={(e) => onUpdateStep4({ glassDoor: e.target.value })}
-                className="h-4 w-4 accent-[#E8621A]"
-              />
-              {door}
-            </label>
-          ))}
+        <div className="flex justify-between items-center">
+          <h3 className="text-xs font-bold text-slate-900">Glass Door</h3>
+          <Switch checked={includeGlassDoor} onCheckedChange={(c) => onUpdateStep4({ includeGlassDoor: c })} />
+        </div>
+
+        <div className={`space-y-2 pt-1 transition-opacity ${!includeGlassDoor ? 'opacity-40 pointer-events-none' : ''}`}>
+          {GLASS_DOOR_OPTIONS.map((door) => {
+            const currentList = glassDoor ? glassDoor.split(", ").filter(Boolean) : [];
+            const isSelected = currentList.includes(door);
+            return (
+              <div
+                key={door}
+                onClick={() => toggleGlassDoor(door)}
+                className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${
+                  isSelected
+                    ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
+              >
+                <div className="text-xs font-bold text-slate-900">{door}</div>
+                {isSelected && <span className="text-[10px] font-semibold text-emerald-600">Selected</span>}
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Acrylic Tile Panel System */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Acrylic Tile Panel System</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="text-xs font-bold text-slate-900">Acrylic Tile Panel System</h3>
+          <Switch checked={data.includeAcrylicTilePanel} onCheckedChange={(c) => onUpdate({ includeAcrylicTilePanel: c })} />
+        </div>
 
-        <div className="space-y-2.5 pt-1">
-          {ACRYLIC_PANELS.map((panel) => (
-            <label key={panel} className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
-              <input
-                type="radio"
-                name="acrylicPanel"
-                value={panel}
-                checked={data.acrylicTilePanel === panel}
-                onChange={(e) => onUpdate({ acrylicTilePanel: e.target.value })}
-                className="h-4 w-4 accent-[#E8621A]"
-              />
-              {panel}
-            </label>
-          ))}
+        <div className={`space-y-2 pt-1 transition-opacity ${!data.includeAcrylicTilePanel ? 'opacity-40 pointer-events-none' : ''}`}>
+          {ACRYLIC_PANELS.map((panel) => {
+            const currentList = data.acrylicTilePanel ? data.acrylicTilePanel.split(", ").filter(Boolean) : [];
+            const isSelected = currentList.includes(panel);
+            return (
+              <div
+                key={panel}
+                onClick={() => toggleAcrylicPanel(panel)}
+                className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${
+                  isSelected
+                    ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
+              >
+                <div className="text-xs font-bold text-slate-900">{panel}</div>
+                {isSelected && <span className="text-[10px] font-semibold text-emerald-600">Selected</span>}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Package Upgrades (Moved to Step 2) */}
+      {/* Package Upgrades */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Package Upgrades</h3>
-        <div className="space-y-2.5">
-          {UPGRADES_LIST.map((item) => (
-            <label key={item} className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={packageUpgrades.includes(item)}
-                onChange={() => toggleUpgrade(item)}
-                className="h-4 w-4 rounded accent-[#E8621A]"
-              />
-              {item}
-            </label>
-          ))}
+        <h3 className="text-base font-bold text-slate-900">Package Upgrades</h3>
+        <div className="space-y-3">
+          {UPGRADES_LIST.map((item) => {
+            const isChecked = packageUpgrades.includes(item);
+            return (
+              <div
+                key={item}
+                className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/40 p-3.5"
+              >
+                <div className="text-xs font-bold text-slate-900">{item}</div>
+                <Switch checked={isChecked} onCheckedChange={() => toggleUpgrade(item)} />
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Notes */}
-      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100">
-        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notes</label>
+      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-2">
+        <h3 className="text-base font-bold text-slate-900">Notes</h3>
         <textarea
-          rows={2}
+          rows={3}
           value={data.notes}
           onChange={(e) => onUpdate({ notes: e.target.value })}
           placeholder="Additional observations..."
-          className="w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
+          className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
         />
       </div>
 

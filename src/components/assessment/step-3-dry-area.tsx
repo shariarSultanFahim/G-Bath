@@ -1,14 +1,22 @@
 "use client";
 
+import { Switch } from "@/components/ui/switch";
+
 export interface Step3Data {
+  includePackage: boolean;
   package: string;
+  packageNotes: string;
+  includeVanity: boolean;
   vanityStyle: string;
   vanityDetails: string;
+  vanityNotes: string;
   packageUpgrades: string[];
+  includeMirrorLighting: boolean;
   mirror: string;
   vanityLighting: string;
   upgradeLighting: string;
   towelBars: string;
+  mirrorLightingNotes: string;
   comments: string;
 }
 
@@ -19,23 +27,28 @@ interface Props {
   onPrev: () => void;
 }
 
-export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
+const VANITY_STYLES = ["None", "Modern", "Classic"];
+const TOWEL_BAR_FINISHES = ["None", "Chrome", "Black"];
 
+export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
   return (
     <div className="space-y-5">
       {/* Dry Area Package */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dry Area Package</h3>
-        <div className="space-y-2">
-          {["Acrylic Flooring", "Paint Finishes"].map((pkg) => {
-            const selectedList = data.package ? data.package.split(", ").filter(Boolean) : [];
-            const isChecked = selectedList.includes(pkg);
-            return (
-              <label key={pkg} className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isChecked}
-                  onChange={() => {
+        <div className="flex justify-between items-center">
+          <h3 className="text-xs font-bold text-slate-900">Dry Area Package</h3>
+          <Switch checked={data.includePackage} onCheckedChange={(c) => onUpdate({ includePackage: c })} />
+        </div>
+
+        <div className={`space-y-3 transition-opacity ${!data.includePackage ? 'opacity-40 pointer-events-none' : ''}`}>
+          <div className="space-y-2 pt-1">
+            {["Acrylic Flooring", "Paint Finishes"].map((pkg) => {
+              const selectedList = data.package ? data.package.split(", ").filter(Boolean) : [];
+              const isChecked = selectedList.includes(pkg);
+              return (
+                <div
+                  key={pkg}
+                  onClick={() => {
                     let updated: string[];
                     if (isChecked) {
                       updated = selectedList.filter((p) => p !== pkg);
@@ -44,130 +57,218 @@ export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
                     }
                     onUpdate({ package: updated.join(", ") });
                   }}
-                  className="h-4 w-4 rounded accent-[#E8621A]"
-                />
-                {pkg}
-              </label>
-            );
-          })}
+                  className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${
+                    isChecked
+                      ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <div className="text-xs font-bold text-slate-900">{pkg}</div>
+                  {isChecked && <span className="text-[10px] font-semibold text-emerald-600">Selected</span>}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pt-2">
+            <label className="block text-[11px] font-semibold text-slate-700 mb-1">Package Notes:</label>
+            <textarea
+              rows={2}
+              value={data.packageNotes}
+              onChange={(e) => onUpdate({ packageNotes: e.target.value })}
+              placeholder="Enter notes about the dry area package..."
+              className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Vanity Style */}
-      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Vanity Style</h3>
-        <div className="space-y-2">
-          {["Modern", "Classic"].map((style) => (
-            <label key={style} className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
-              <input
-                type="radio"
-                name="vanityStyle"
-                value={style}
-                checked={data.vanityStyle === style}
-                onChange={(e) => onUpdate({ vanityStyle: e.target.value })}
-                className="h-4 w-4 accent-[#E8621A]"
-              />
-              {style}
-            </label>
-          ))}
+      {/* Vanity Selection */}
+      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xs font-bold text-slate-900">Vanity Selection</h3>
+          <Switch checked={data.includeVanity} onCheckedChange={(c) => onUpdate({ includeVanity: c })} />
         </div>
-        <input
-          type="text"
-          value={data.vanityDetails}
-          onChange={(e) => onUpdate({ vanityDetails: e.target.value })}
-          placeholder="Vanity details..."
-          className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#E8621A] focus:outline-none"
-        />
+
+        <div className={`space-y-4 transition-opacity ${!data.includeVanity ? 'opacity-40 pointer-events-none' : ''}`}>
+          {/* Style */}
+          <div className="space-y-2">
+            <label className="block text-[11px] font-semibold text-slate-700">Style:</label>
+            <div className="flex gap-2">
+              {VANITY_STYLES.map((style) => {
+                const isSelected = data.vanityStyle === style;
+                return (
+                  <button
+                    key={style}
+                    type="button"
+                    onClick={() => onUpdate({ vanityStyle: style })}
+                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
+                      isSelected
+                        ? (style === "None" ? "bg-rose-500 text-white shadow-sm" : "bg-[#C4A47C] text-white shadow-sm")
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    {style}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Vanity Details */}
+          {data.vanityStyle !== "None" && (
+            <div className="space-y-1.5 pt-1">
+              <label className="block text-[11px] font-semibold text-slate-700">Vanity Details:</label>
+              <input
+                type="text"
+                value={data.vanityDetails}
+                onChange={(e) => onUpdate({ vanityDetails: e.target.value })}
+                placeholder="Enter vanity details..."
+                className="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
+              />
+            </div>
+          )}
+
+          {/* Vanity Notes */}
+          <div className="pt-2">
+            <label className="block text-[11px] font-semibold text-slate-700 mb-1">Vanity Notes:</label>
+            <textarea
+              rows={2}
+              value={data.vanityNotes}
+              onChange={(e) => onUpdate({ vanityNotes: e.target.value })}
+              placeholder="Enter vanity details or special instructions..."
+              className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Mirror & Lighting & Towel Bars */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-4">
-        <div>
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Mirror</h3>
-          <div className="flex gap-4">
-            {["LED", "Framed"].map((m) => (
-              <label key={m} className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                <input
-                  type="radio"
-                  name="mirror"
-                  value={m}
-                  checked={data.mirror === m}
-                  onChange={(e) => onUpdate({ mirror: e.target.value })}
-                  className="h-4 w-4 accent-[#E8621A]"
-                />
-                {m}
-              </label>
-            ))}
-          </div>
+        <div className="flex justify-between items-center">
+          <h3 className="text-xs font-bold text-slate-900">Mirror / Cabinet & Lighting Choice</h3>
+          <Switch checked={data.includeMirrorLighting} onCheckedChange={(c) => onUpdate({ includeMirrorLighting: c })} />
         </div>
 
-        <div>
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Vanity Lighting</h3>
-          <div className="flex gap-4">
-            {["Pendant Style", "LED"].map((l) => (
-              <label key={l} className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                <input
-                  type="radio"
-                  name="vanityLighting"
-                  value={l}
-                  checked={data.vanityLighting === l}
-                  onChange={(e) => onUpdate({ vanityLighting: e.target.value })}
-                  className="h-4 w-4 accent-[#E8621A]"
-                />
-                {l}
-              </label>
-            ))}
+        <div className={`space-y-6 transition-opacity ${!data.includeMirrorLighting ? 'opacity-40 pointer-events-none' : ''}`}>
+          
+          {/* Mirror */}
+          <div className="space-y-2 pt-1">
+            <h4 className="text-[11px] font-semibold text-slate-700">Mirror:</h4>
+            {["LED", "Framed"].map((m) => {
+              const isSelected = data.mirror === m;
+              return (
+                <div
+                  key={m}
+                  onClick={() => onUpdate({ mirror: m })}
+                  className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${
+                    isSelected
+                      ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <div className="text-xs font-bold text-slate-900">{m}</div>
+                  {isSelected && <span className="text-[10px] font-semibold text-emerald-600">Selected</span>}
+                </div>
+              );
+            })}
           </div>
-        </div>
 
-        <div>
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Upgrade Lighting</h3>
-          <div className="flex gap-4">
-            {["POT Lights", "LED"].map((l) => (
-              <label key={l} className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                <input
-                  type="radio"
-                  name="upgradeLighting"
-                  value={l}
-                  checked={data.upgradeLighting === l}
-                  onChange={(e) => onUpdate({ upgradeLighting: e.target.value })}
-                  className="h-4 w-4 accent-[#E8621A]"
-                />
-                {l}
-              </label>
-            ))}
+          {/* Vanity Lighting */}
+          <div className="space-y-2">
+            <h4 className="text-[11px] font-semibold text-slate-700">Vanity Lighting:</h4>
+            <div className="flex gap-2">
+              {["Pendant Style", "LED"].map((l) => {
+                const isSelected = data.vanityLighting === l;
+                return (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => onUpdate({ vanityLighting: l })}
+                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
+                      isSelected
+                        ? "bg-[#C4A47C] text-white shadow-sm"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    {l}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        <div>
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Towel Bars</h3>
-          <div className="flex gap-4">
-            {["Black", "Chrome"].map((t) => (
-              <label key={t} className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                <input
-                  type="radio"
-                  name="towelBars"
-                  value={t}
-                  checked={data.towelBars === t}
-                  onChange={(e) => onUpdate({ towelBars: e.target.value })}
-                  className="h-4 w-4 accent-[#E8621A]"
-                />
-                {t}
-              </label>
-            ))}
+          {/* Upgrade Lighting */}
+          <div className="space-y-2">
+            <h4 className="text-[11px] font-semibold text-slate-700">Upgrade Lighting:</h4>
+            <div className="flex gap-2">
+              {["POT Lights", "LED"].map((l) => {
+                const isSelected = data.upgradeLighting === l;
+                return (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => onUpdate({ upgradeLighting: l })}
+                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
+                      isSelected
+                        ? "bg-[#C4A47C] text-white shadow-sm"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    {l}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Towel Bar Finish */}
+          <div className="space-y-2">
+            <h4 className="text-[11px] font-semibold text-slate-700">Towel Bar Finish:</h4>
+            <div className="flex gap-2">
+              {TOWEL_BAR_FINISHES.map((finish) => {
+                const isSelected = data.towelBars === finish;
+                return (
+                  <button
+                    key={finish}
+                    type="button"
+                    onClick={() => onUpdate({ towelBars: finish })}
+                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
+                      isSelected
+                        ? (finish === "None" ? "bg-rose-500 text-white shadow-sm" : "bg-[#C4A47C] text-white shadow-sm")
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    {finish}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Mirror / Lighting Notes */}
+          <div className="pt-2">
+            <label className="block text-[11px] font-semibold text-slate-700 mb-1">Mirror, Lighting & Towel Bar Notes:</label>
+            <textarea
+              rows={2}
+              value={data.mirrorLightingNotes}
+              onChange={(e) => onUpdate({ mirrorLightingNotes: e.target.value })}
+              placeholder="Enter notes about mirrors, lighting or towel bars..."
+              className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
+            />
           </div>
         </div>
       </div>
 
       {/* Additional Comments */}
-      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100">
-        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Additional Comments</label>
+      <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-2">
+        <h3 className="text-base font-bold text-slate-900">Additional Comments</h3>
         <textarea
-          rows={2}
+          rows={3}
           value={data.comments}
           onChange={(e) => onUpdate({ comments: e.target.value })}
           placeholder="Any additional comments..."
-          className="w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
+          className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
         />
       </div>
 

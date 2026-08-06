@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, UserCheck, Calendar, ClipboardList, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, UserCheck, Calendar, ClipboardList, LogOut, Settings } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 import {
@@ -35,6 +35,7 @@ export function AdminAppSidebar({ user }: AdminAppSidebarProps) {
     { href: "/admin/customers", label: "Customers", icon: Users },
     { href: "/admin/salespersons", label: "Salespersons", icon: UserCheck },
     { href: "/admin/assessments", label: "Assessments", icon: ClipboardList },
+    { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
   return (
