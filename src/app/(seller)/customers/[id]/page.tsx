@@ -4,6 +4,8 @@ import { format } from "date-fns";
 import { ArrowLeft, Phone, Mail, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { CustomerActions } from "./customer-actions";
+
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const customer = await db.customer.findUnique({
@@ -17,16 +19,19 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="space-y-5">
-      {/* Top Header */}
-      {/* <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#E8621A]">Good</h1>
-        <span className="text-xs text-slate-400 font-medium">{format(new Date(), "hh:mm a")}</span>
-      </div> */}
-
-      {/* Back button */}
-      <Link href="/customers" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#E8621A]">
-        <ArrowLeft className="h-4 w-4" /> Customers
-      </Link>
+      {/* Top Header / Back button */}
+      <div className="flex items-center justify-between">
+        <Link href="/customers" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#E8621A]">
+          <ArrowLeft className="h-4 w-4" /> Customers
+        </Link>
+        <CustomerActions customer={{
+          id: customer.id,
+          name: customer.name,
+          email: customer.email || "",
+          phone: customer.phone || "",
+          address: customer.address || ""
+        }} />
+      </div>
 
       {/* Customer Card */}
       <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100 space-y-6">
