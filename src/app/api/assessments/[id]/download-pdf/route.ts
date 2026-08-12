@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth-utils";
-import { PDFData } from "@/lib/pdf-generator";
+import { generateAssessmentPDFBuffer, PDFData } from "@/lib/pdf-generator";
 import { format } from "date-fns";
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
   const { id } = await params;
   const assessment = await db.assessment.findUnique({
@@ -14,7 +14,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     include: { customer: true, salesperson: true },
   });
 
-  if (!assessment) return NextResponse.json({ error: "Assessment not found" }, { status: 404 });
+  if (!assessment) return new NextResponse("Assessment not found", { status: 404 });
 
   const pdfData: PDFData = {
     customerName: assessment.customer.name,
@@ -36,15 +36,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   };
 
   try {
-    const pdfUrl = `/api/assessments/${assessment.id}/download-pdf`;
-    const updated = await db.assessment.update({
-      where: { id },
-      data: { pdfUrl, status: assessment.status === "DRAFT" ? "PDF_READY" : assessment.status },
-    });
+    const buffer = await generateAssessmentPDFBuffer(pdfData, assessment.id);
 
-    return NextResponse.json({ pdfUrl: updated.pdfUrl });
+    return new NextResponse(buffer as unknown as BodyInit, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="Assessment_${assessment.customer.name.replace(/[^a-zA-Z0-9]/g, "_")}.pdf"`,
+      },
+    });
   } catch (err) {
     console.error("PDF generation failed:", err);
-    return NextResponse.json({ error: "PDF generation failed" }, { status: 500 });
+    return new NextResponse("PDF generation failed", { status: 500 });
   }
 }

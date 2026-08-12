@@ -347,10 +347,7 @@ function photoGridStyle(photos: string[]) {
   return styles.photoGrid;
 }
 
-export async function generateAssessmentPDF(data: PDFData, assessmentId: string): Promise<string> {
-  const dir = path.join(process.cwd(), "public", "uploads", "pdfs");
-  await mkdir(dir, { recursive: true });
-
+export async function generateAssessmentPDFBuffer(data: PDFData, assessmentId: string): Promise<Buffer> {
   let logoBase64: string | undefined = undefined;
 
   // Try PNG logo first, fallback to avif or logo-192
@@ -372,9 +369,8 @@ export async function generateAssessmentPDF(data: PDFData, assessmentId: string)
     }
   }
 
-  const fileName = `Assessment_${data.customerName.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.pdf`;
-  const filePath = path.join(dir, fileName);
-
-  await renderToFile(<AssessmentPDFDocument data={data} logoBase64={logoBase64} />, filePath);
-  return `/uploads/pdfs/${fileName}`;
+  // Import renderToBuffer dynamically or directly
+  const { renderToBuffer } = await import("@react-pdf/renderer");
+  const buffer = await renderToBuffer(<AssessmentPDFDocument data={data} logoBase64={logoBase64} />);
+  return Buffer.from(buffer);
 }
