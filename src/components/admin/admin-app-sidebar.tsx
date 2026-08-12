@@ -26,8 +26,11 @@ interface AdminAppSidebarProps {
   };
 }
 
+import { useState } from "react";
+
 export function AdminAppSidebar({ user }: AdminAppSidebarProps) {
   const pathname = usePathname();
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -84,22 +87,37 @@ export function AdminAppSidebar({ user }: AdminAppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-sidebar-border gap-3">
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-foreground truncate">{user.name}</span>
-          <span className="text-xs text-muted-foreground">Owner / Admin</span>
-        </div>
-
+      <SidebarFooter className="border-sidebar-border gap-3">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => signOut({ callbackUrl: "/admin/login" })}
+          onClick={() => setShowSignOutConfirm(true)}
           className="w-full border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
         >
           <LogOut data-icon="inline-start" />
-          Sign Out
+          <span className="group-data-[state=collapsed]:hidden flex">Sign Out</span>
         </Button>
       </SidebarFooter>
+
+      {showSignOutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-background rounded-lg shadow-lg p-6 max-w-md w-full mx-4 border border-border">
+            <h3 className="text-lg font-semibold mb-2">Confirm Sign Out</h3>
+            <p className="text-muted-foreground mb-6">Are you sure you want to sign out of your account?</p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowSignOutConfirm(false)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => signOut({ callbackUrl: "/admin/login" })}
+              >
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Sidebar>
   );
 }

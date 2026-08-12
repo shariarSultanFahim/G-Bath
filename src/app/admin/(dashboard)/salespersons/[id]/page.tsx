@@ -82,7 +82,7 @@ export default function AdminSalespersonDetailPage({ params }: { params: Promise
 
       {/* Header Profile Card */}
       <Card>
-        <CardContent className="pt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <CardContent className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <Avatar className="size-16 border-2 border-primary/20 bg-orange-50 text-[#E8621A] font-extrabold text-2xl">
               {salesperson.avatar && <AvatarImage src={salesperson.avatar} alt={salesperson.name} />}
