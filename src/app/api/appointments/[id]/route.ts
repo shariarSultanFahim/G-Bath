@@ -27,6 +27,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   try {
     const body = await req.json();
+    if (body.date) {
+      body.date = new Date(body.date);
+    }
+    
     const updated = await db.appointment.update({
       where: { id },
       data: body,
@@ -40,5 +44,24 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   } catch (err) {
     console.error("Update appointment error:", err);
     return NextResponse.json({ error: "Failed to update appointment" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  // Using same logic as PUT
+  return PUT(req, { params });
+}
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  try {
+    await db.appointment.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Delete appointment error:", err);
+    return NextResponse.json({ error: "Failed to delete appointment" }, { status: 500 });
   }
 }

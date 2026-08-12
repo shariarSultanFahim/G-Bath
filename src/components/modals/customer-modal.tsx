@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -16,13 +16,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
 
+export interface CustomerData {
+  id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  initialData?: CustomerData | null;
 }
 
-export function NewCustomerModal({ isOpen, onClose, onSuccess }: Props) {
+export function CustomerModal({ isOpen, onClose, onSuccess, initialData }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -30,29 +39,48 @@ export function NewCustomerModal({ isOpen, onClose, onSuccess }: Props) {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
+  const isEditing = !!initialData;
+
+  useEffect(() => {
+    if (initialData && isOpen) {
+      setName(initialData.name || "");
+      setEmail(initialData.email || "");
+      setPhone(initialData.phone || "");
+      setAddress(initialData.address || "");
+    } else if (isOpen && !initialData) {
+      setName("");
+      setEmail("");
+      setPhone("");
+      setAddress("");
+    }
+  }, [initialData, isOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const res = await fetch("/api/customers", {
-        method: "POST",
+      const url = isEditing ? `/api/customers/${initialData.id}` : "/api/customers";
+      const method = isEditing ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, phone, address }),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        toast.error(err.error || "Failed to create customer");
+        toast.error(err.error || `Failed to ${isEditing ? "update" : "create"} customer`);
       } else {
-        toast.success("Customer created!");
-        setName("");
-        setEmail("");
-        setPhone("");
-        setAddress("");
+        toast.success(`Customer ${isEditing ? "updated" : "created"}!`);
         queryClient.invalidateQueries({ queryKey: ["admin-customers"] });
         queryClient.invalidateQueries({ queryKey: ["customers"] });
         queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+        if (isEditing && initialData?.id) {
+          queryClient.invalidateQueries({ queryKey: ["customer", initialData.id] });
+          queryClient.invalidateQueries({ queryKey: ["admin-customer", initialData.id] });
+        }
         onClose();
         onSuccess?.();
       }
@@ -68,13 +96,15 @@ export function NewCustomerModal({ isOpen, onClose, onSuccess }: Props) {
       <SheetContent side="right" className="w-full sm:max-w-md flex flex-col justify-between">
         <div>
           <SheetHeader className="pb-4 border-b border-border">
-            <SheetTitle>New Customer</SheetTitle>
+            <SheetTitle>{isEditing ? "Edit Customer" : "New Customer"}</SheetTitle>
             <SheetDescription>
-              Enter client contact details to register a new bathroom renovation customer.
+              {isEditing 
+                ? "Update the details for this customer." 
+                : "Enter client contact details to register a new bathroom renovation customer."}
             </SheetDescription>
           </SheetHeader>
 
-          <form id="new-customer-form" onSubmit={handleSubmit} className="py-6">
+          <form id="customer-form" onSubmit={handleSubmit} className="py-6">
             <FieldGroup className="flex flex-col gap-4">
               <Field>
                 <FieldLabel htmlFor="cust-name">Full Name</FieldLabel>
@@ -129,11 +159,11 @@ export function NewCustomerModal({ isOpen, onClose, onSuccess }: Props) {
           </Button>
           <Button
             type="submit"
-            form="new-customer-form"
+            form="customer-form"
             disabled={loading}
             className="flex-1 bg-[#E8621A] hover:bg-orange-600 text-white font-semibold"
           >
-            {loading ? "Saving..." : "Save Customer"}
+            {loading ? "Saving..." : (isEditing ? "Save Changes" : "Save Customer")}
           </Button>
         </SheetFooter>
       </SheetContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -17,13 +17,23 @@ import { Input } from "@/components/ui/input";
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 
+export interface AppointmentData {
+  id?: string;
+  customerId: string;
+  salespersonId: string;
+  date: string;
+  time: string;
+  notes?: string;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  initialData?: AppointmentData | null;
 }
 
-export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
+export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Props) {
   const [customerId, setCustomerId] = useState("");
   const [salespersonId, setSalespersonId] = useState("");
   const [date, setDate] = useState("");
@@ -32,6 +42,23 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
   const [loading, setLoading] = useState(false);
 
   const queryClient = useQueryClient();
+  const isEditing = !!initialData;
+
+  useEffect(() => {
+    if (initialData && isOpen) {
+      setCustomerId(initialData.customerId || "");
+      setSalespersonId(initialData.salespersonId || "");
+      setDate(initialData.date ? initialData.date.split("T")[0] : "");
+      setTime(initialData.time || "10:00 AM");
+      setNotes(initialData.notes || "");
+    } else if (isOpen && !initialData) {
+      setCustomerId("");
+      setSalespersonId("");
+      setDate("");
+      setTime("10:00 AM");
+      setNotes("");
+    }
+  }, [initialData, isOpen]);
 
   // Fetch Customers for Searchable Combobox
   const { data: customersData, isLoading: loadingCustomers } = useQuery({
@@ -60,6 +87,8 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
       ? customersData
       : Array.isArray(customersData?.data)
       ? customersData.data
+      : Array.isArray(customersData?.customers)
+      ? customersData.customers
       : [];
 
   const salespersonsList: Array<{ id: string; name: string; email: string; status: string }> =
@@ -76,7 +105,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
   }));
 
   const salespersonOptions = salespersonsList
-    .filter((s) => s.status === "ACTIVE")
+    .filter((s) => s.status === "ACTIVE" || (isEditing && s.id === salespersonId))
     .map((s) => ({
       id: s.id,
       label: s.name,
@@ -102,8 +131,11 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/appointments", {
-        method: "POST",
+      const url = isEditing ? `/api/appointments/${initialData.id}` : "/api/appointments";
+      const method = isEditing ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId,
@@ -116,21 +148,20 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
 
       if (!res.ok) {
         const err = await res.json();
-        toast.error(err.error || "Failed to create appointment");
+        toast.error(err.error || `Failed to ${isEditing ? "update" : "create"} appointment`);
       } else {
-        toast.success("Appointment scheduled successfully!");
-        setCustomerId("");
-        setSalespersonId("");
-        setDate("");
-        setNotes("");
+        toast.success(`Appointment ${isEditing ? "updated" : "scheduled"} successfully!`);
         queryClient.invalidateQueries({ queryKey: ["admin-appointments"] });
         queryClient.invalidateQueries({ queryKey: ["appointments"] });
         queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+        if (isEditing && initialData?.id) {
+          queryClient.invalidateQueries({ queryKey: ["admin-appointment", initialData.id] });
+        }
         onClose();
         onSuccess?.();
       }
     } catch {
-      toast.error("An error occurred while creating appointment");
+      toast.error(`An error occurred while ${isEditing ? "updating" : "creating"} appointment`);
     } finally {
       setLoading(false);
     }
@@ -138,16 +169,18 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col justify-between">
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col justify-between overflow-y-auto">
         <div>
           <SheetHeader className="pb-4 border-b border-border">
-            <SheetTitle>Schedule New Appointment</SheetTitle>
+            <SheetTitle>{isEditing ? "Edit Appointment" : "Schedule New Appointment"}</SheetTitle>
             <SheetDescription>
-              Assign a salesperson to visit a client for a bathroom assessment.
+              {isEditing 
+                ? "Update the details for this appointment."
+                : "Assign a salesperson to visit a client for a bathroom assessment."}
             </SheetDescription>
           </SheetHeader>
 
-          <form id="create-appointment-form" onSubmit={handleSubmit} className="py-6 flex flex-col gap-4">
+          <form id="appointment-form" onSubmit={handleSubmit} className="py-6 flex flex-col gap-4">
             <FieldGroup className="flex flex-col gap-4">
               {/* Searchable Customer Combobox */}
               <Field>
@@ -209,11 +242,11 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }: Props) {
           </Button>
           <Button
             type="submit"
-            form="create-appointment-form"
+            form="appointment-form"
             disabled={loading}
             className="flex-1 bg-[#E8621A] hover:bg-orange-600 text-white font-semibold"
           >
-            {loading ? "Scheduling..." : "Schedule Appointment"}
+            {loading ? "Saving..." : (isEditing ? "Save Changes" : "Schedule Appointment")}
           </Button>
         </SheetFooter>
       </SheetContent>

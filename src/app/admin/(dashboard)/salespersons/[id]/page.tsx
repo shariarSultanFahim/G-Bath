@@ -3,8 +3,9 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { ArrowLeft, Mail, Phone, Calendar, UserCheck, UserX, Eye, FileText, KeyRound } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Calendar, UserCheck, UserX, Eye, FileText, KeyRound, Edit, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,10 +15,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResetPasswordModal } from "@/components/admin/reset-password-modal";
+import { SalespersonModal, SalespersonData } from "@/components/admin/salesperson-modal";
+import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal";
 
 export default function AdminSalespersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const [isResetOpen, setIsResetOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: salesperson, isLoading } = useQuery({
@@ -45,9 +51,31 @@ export default function AdminSalespersonDetailPage({ params }: { params: Promise
       queryClient.invalidateQueries({ queryKey: ["admin-salesperson", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-salespersons"] });
     },
-    onError: () => {
-      toast.error("Failed to update status");
+    onError: (err: Error) => {
+      toast.error(err.message);
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/admin/salespersons/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to delete salesperson");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Salesperson deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-salespersons"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      router.push("/admin/salespersons");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    }
   });
 
   if (isLoading) {
@@ -82,63 +110,72 @@ export default function AdminSalespersonDetailPage({ params }: { params: Promise
 
       {/* Header Profile Card */}
       <Card>
-        <CardContent className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="size-16 border-2 border-primary/20 bg-orange-50 text-[#E8621A] font-extrabold text-2xl">
-              {salesperson.avatar && <AvatarImage src={salesperson.avatar} alt={salesperson.name} />}
-              <AvatarFallback>{salesperson.name[0]}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">{salesperson.name}</h1>
-                <Badge variant={salesperson.status === "ACTIVE" ? "success" : "destructive"}>
-                  {salesperson.status}
-                </Badge>
+        <CardContent className="pt-6 flex flex-col items-start gap-6 relative">
+          <div className="flex flex-col md:flex-row w-full justify-between items-start md:items-center gap-6">
+            <div className="flex items-center gap-4">
+              <Avatar className="size-16 border-2 border-primary/20 bg-orange-50 text-[#E8621A] font-extrabold text-2xl">
+                {salesperson.avatar && <AvatarImage src={salesperson.avatar} alt={salesperson.name} />}
+                <AvatarFallback>{salesperson.name[0]}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground">{salesperson.name}</h1>
+                  <Badge variant={salesperson.status === "ACTIVE" ? "success" : "destructive"}>
+                    {salesperson.status}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Salesperson Role · Added on {format(new Date(salesperson.createdAt), "d MMMM yyyy")}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Salesperson Role · Added on {format(new Date(salesperson.createdAt), "d MMMM yyyy")}
-              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 self-end md:self-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsResetOpen(true)}
+                className="text-xs font-semibold border-orange-200 text-orange-700 hover:bg-orange-50"
+              >
+                <KeyRound data-icon="inline-start" /> Reset Password
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)} className="text-xs">
+                <Edit className="size-4 mr-2" />
+                Edit
+              </Button>
+              <Button variant="destructive" size="sm" onClick={() => setIsDeleteOpen(true)} className="text-xs">
+                <Trash2 className="size-4 mr-2" />
+                Delete
+              </Button>
+              <Button
+                variant={salesperson.status === "ACTIVE" ? "destructive" : "default"}
+                size="sm"
+                onClick={() => toggleStatusMutation.mutate(salesperson.status)}
+                disabled={toggleStatusMutation.isPending}
+                className="text-xs font-semibold"
+              >
+                {salesperson.status === "ACTIVE" ? (
+                  <>
+                    <UserX data-icon="inline-start" /> Suspend
+                  </>
+                ) : (
+                  <>
+                    <UserCheck data-icon="inline-start" /> Activate
+                  </>
+                )}
+              </Button>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div className="flex flex-wrap gap-2 text-xs">
-              <div className="flex items-center gap-2 rounded-xl bg-muted/60 px-3 py-2">
-                <Mail className="size-4 text-[#E8621A]" />
-                <span className="font-semibold">{salesperson.email}</span>
-              </div>
-              <div className="flex items-center gap-2 rounded-xl bg-muted/60 px-3 py-2">
-                <Phone className="size-4 text-[#E8621A]" />
-                <span className="font-semibold">{salesperson.phone || "No phone"}</span>
-              </div>
+          <div className="flex flex-wrap gap-2 text-xs w-full">
+            <div className="flex items-center gap-2 rounded-xl bg-muted/60 px-3 py-2">
+              <Mail className="size-4 text-[#E8621A]" />
+              <span className="font-semibold">{salesperson.email}</span>
             </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsResetOpen(true)}
-              className="text-xs font-semibold border-orange-200 text-orange-700 hover:bg-orange-50"
-            >
-              <KeyRound data-icon="inline-start" /> Reset Password
-            </Button>
-
-            <Button
-              variant={salesperson.status === "ACTIVE" ? "destructive" : "default"}
-              size="sm"
-              onClick={() => toggleStatusMutation.mutate(salesperson.status)}
-              disabled={toggleStatusMutation.isPending}
-              className="text-xs font-semibold"
-            >
-              {salesperson.status === "ACTIVE" ? (
-                <>
-                  <UserX data-icon="inline-start" /> Suspend Account
-                </>
-              ) : (
-                <>
-                  <UserCheck data-icon="inline-start" /> Activate Account
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-2 rounded-xl bg-muted/60 px-3 py-2">
+              <Phone className="size-4 text-[#E8621A]" />
+              <span className="font-semibold">{salesperson.phone || "No phone"}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -211,6 +248,21 @@ export default function AdminSalespersonDetailPage({ params }: { params: Promise
         salesperson={salesperson ? { id: salesperson.id, name: salesperson.name, email: salesperson.email } : null}
         isOpen={isResetOpen}
         onClose={() => setIsResetOpen(false)}
+      />
+
+      <SalespersonModal
+        initialData={salesperson as SalespersonData}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={() => deleteMutation.mutate()}
+        entityType="salesperson"
+        entityName={salesperson.name}
+        isDeleting={deleteMutation.isPending}
       />
     </div>
   );

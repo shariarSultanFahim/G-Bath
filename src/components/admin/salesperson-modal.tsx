@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -16,13 +16,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
 
+export interface SalespersonData {
+  id?: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  initialData?: SalespersonData | null;
 }
 
-export function CreateSalespersonModal({ isOpen, onClose, onSuccess }: Props) {
+export function SalespersonModal({ isOpen, onClose, onSuccess, initialData }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -30,27 +38,51 @@ export function CreateSalespersonModal({ isOpen, onClose, onSuccess }: Props) {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
+  const isEditing = !!initialData;
+
+  useEffect(() => {
+    if (initialData && isOpen) {
+      setName(initialData.name || "");
+      setEmail(initialData.email || "");
+      setPhone(initialData.phone || "");
+      setPassword(""); // Password isn't updated here usually, unless specified
+    } else if (isOpen && !initialData) {
+      setName("");
+      setEmail("");
+      setPhone("");
+      setPassword("seller123");
+    }
+  }, [initialData, isOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const res = await fetch("/api/admin/salespersons", {
-        method: "POST",
+      const url = isEditing ? `/api/admin/salespersons/${initialData.id}` : "/api/admin/salespersons";
+      const method = isEditing ? "PATCH" : "POST";
+
+      const bodyData: any = { name, email, phone };
+      if (!isEditing) {
+        bodyData.password = password;
+      }
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, password }),
+        body: JSON.stringify(bodyData),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        toast.error(err.error || "Failed to create salesperson");
+        toast.error(err.error || `Failed to ${isEditing ? "update" : "create"} salesperson`);
       } else {
-        toast.success("Salesperson account created!");
-        setName("");
-        setEmail("");
-        setPhone("");
+        toast.success(`Salesperson account ${isEditing ? "updated" : "created"}!`);
         queryClient.invalidateQueries({ queryKey: ["admin-salespersons"] });
         queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+        if (isEditing && initialData?.id) {
+          queryClient.invalidateQueries({ queryKey: ["admin-salespersons", initialData.id] });
+        }
         onClose();
         onSuccess?.();
       }
@@ -66,13 +98,15 @@ export function CreateSalespersonModal({ isOpen, onClose, onSuccess }: Props) {
       <SheetContent side="right" className="w-full sm:max-w-md flex flex-col justify-between">
         <div>
           <SheetHeader className="pb-4 border-b border-border">
-            <SheetTitle>Create Salesperson</SheetTitle>
+            <SheetTitle>{isEditing ? "Edit Salesperson" : "Create Salesperson"}</SheetTitle>
             <SheetDescription>
-              Add a new salesperson account to access the mobile web app.
+              {isEditing
+                ? "Update salesperson account details."
+                : "Add a new salesperson account to access the mobile web app."}
             </SheetDescription>
           </SheetHeader>
 
-          <form id="create-salesperson-form" onSubmit={handleSubmit} className="py-6 flex flex-col gap-4">
+          <form id="salesperson-form" onSubmit={handleSubmit} className="py-6 flex flex-col gap-4">
             <FieldGroup className="flex flex-col gap-4">
               <Field>
                 <FieldLabel htmlFor="sp-name">Full Name</FieldLabel>
@@ -108,21 +142,25 @@ export function CreateSalespersonModal({ isOpen, onClose, onSuccess }: Props) {
                 />
               </Field>
 
-              <Field>
-                <FieldLabel htmlFor="sp-pass">Initial Password</FieldLabel>
-                <Input
-                  id="sp-pass"
-                  type="text"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </Field>
+              {!isEditing && (
+                <Field>
+                  <FieldLabel htmlFor="sp-pass">Initial Password</FieldLabel>
+                  <Input
+                    id="sp-pass"
+                    type="text"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </Field>
+              )}
             </FieldGroup>
 
-            <p className="rounded-xl bg-muted p-3 text-xs text-muted-foreground italic">
-              The salesperson will log in using this email address and password.
-            </p>
+            {!isEditing && (
+              <p className="rounded-xl bg-muted p-3 text-xs text-muted-foreground italic">
+                The salesperson will log in using this email address and password.
+              </p>
+            )}
           </form>
         </div>
 
@@ -132,11 +170,11 @@ export function CreateSalespersonModal({ isOpen, onClose, onSuccess }: Props) {
           </Button>
           <Button
             type="submit"
-            form="create-salesperson-form"
+            form="salesperson-form"
             disabled={loading}
             className="flex-1 bg-[#E8621A] hover:bg-orange-600 text-white font-semibold"
           >
-            {loading ? "Creating..." : "Create Account"}
+            {loading ? "Saving..." : (isEditing ? "Save Changes" : "Create Account")}
           </Button>
         </SheetFooter>
       </SheetContent>

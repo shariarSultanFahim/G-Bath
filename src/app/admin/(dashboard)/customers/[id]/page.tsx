@@ -4,7 +4,13 @@ import { use } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ArrowLeft, Calendar, Phone, Mail, MapPin, Eye, FileText } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Edit, Trash2 } from "lucide-react";
+import { CustomerModal, CustomerData } from "@/components/modals/customer-modal";
+import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +29,11 @@ interface AssessmentItem {
 
 export default function AdminCustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const { data: customer, isLoading } = useQuery({
     queryKey: ["admin-customer", id],
@@ -31,6 +42,28 @@ export default function AdminCustomerDetailPage({ params }: { params: Promise<{ 
       if (!res.ok) throw new Error("Failed to fetch customer details");
       return res.json();
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/customers/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to delete customer");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Customer deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-customers"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      router.push("/admin/customers");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    }
   });
 
   if (isLoading) {
@@ -65,21 +98,34 @@ export default function AdminCustomerDetailPage({ params }: { params: Promise<{ 
 
       {/* Profile Header Card */}
       <Card>
-        <CardContent className="pt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="size-16 border-2 border-primary/20 bg-orange-50 text-[#E8621A] font-extrabold text-2xl">
-              <AvatarFallback>{customer.name[0]}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">{customer.name}</h1>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Calendar className="size-3.5" /> Client since{" "}
-                {format(new Date(customer.createdAt), "d MMMM yyyy")}
+        <CardContent className="flex flex-col items-start gap-6 relative">
+          <div className="flex flex-col md:flex-row w-full justify-between items-start md:items-center gap-6">
+            <div className="flex items-center gap-4">
+              <Avatar className="size-16 border-2 border-primary/20 bg-orange-50 text-[#E8621A] font-extrabold text-2xl">
+                <AvatarFallback>{customer.name[0]}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">{customer.name}</h1>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Calendar className="size-3.5" /> Client since{" "}
+                  {format(new Date(customer.createdAt), "d MMMM yyyy")}
+                </div>
               </div>
+            </div>
+
+            <div className="flex items-center gap-3 self-end md:self-auto">
+              <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
+                <Edit className="size-4 mr-2" />
+                Edit
+              </Button>
+              <Button variant="destructive" size="sm" onClick={() => setIsDeleteOpen(true)}>
+                <Trash2 className="size-4 mr-2" />
+                Delete
+              </Button>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 text-xs">
+          <div className="flex flex-wrap gap-4 text-xs w-full">
             <div className="flex items-center gap-2 rounded-xl bg-muted/60 px-3 py-2">
               <Phone className="size-4 text-[#E8621A]" />
               <span className="font-semibold">{customer.phone}</span>
@@ -166,6 +212,21 @@ export default function AdminCustomerDetailPage({ params }: { params: Promise<{ 
           </Table>
         </div>
       </div>
+
+      <CustomerModal
+        initialData={customer as CustomerData}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={() => deleteMutation.mutate()}
+        entityType="customer"
+        entityName={customer.name}
+        isDeleting={deleteMutation.isPending}
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, Plus, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
-import { NewCustomerModal } from "@/components/modals/new-customer-modal";
+import { CustomerModal } from "@/components/modals/customer-modal";
 
 interface Customer {
   id: string;
@@ -89,7 +89,7 @@ export default function SellerCustomersPage() {
         )}
       </div>
 
-      <NewCustomerModal
+      <CustomerModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchCustomers}

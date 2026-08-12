@@ -7,8 +7,16 @@ import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 
-import { CreateSalespersonModal } from "@/components/admin/create-salesperson-modal";
+import { SalespersonModal, SalespersonData } from "@/components/admin/salesperson-modal";
 import { ResetPasswordModal } from "@/components/admin/reset-password-modal";
+import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { DataPagination } from "@/components/admin/data-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,11 +41,13 @@ export default function AdminSalespersonsPage() {
   const [limit, setLimit] = useQueryState("limit", parseAsInteger.withDefault(10));
 
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
+  const [salespersonToEdit, setSalespersonToEdit] = useState<SalespersonData | null>(null);
+  const [salespersonToDelete, setSalespersonToDelete] = useState<{ id: string; name: string } | null>(null);
   const [resetTarget, setResetTarget] = useState<Salesperson | null>(null);
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin-salespersons", search, page, limit],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -70,9 +80,29 @@ export default function AdminSalespersonsPage() {
       toast.success(`Salesperson ${newStatus.toLowerCase()}`);
       queryClient.invalidateQueries({ queryKey: ["admin-salespersons"] });
     },
-    onError: () => {
-      toast.error("Failed to update status");
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/admin/salespersons/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to delete salesperson");
+      }
+      return res.json();
     },
+    onSuccess: () => {
+      toast.success("Salesperson deleted successfully");
+      setSalespersonToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-salespersons"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    }
   });
 
   return (
@@ -154,37 +184,49 @@ export default function AdminSalespersonsPage() {
                   </TableCell>
                   <TableCell className="font-bold text-xs">{s.assessments?.length || 0}</TableCell>
                   <TableCell className="text-right flex items-center justify-end gap-1">
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="icon"
-                      title="View Details"
-                      className="size-8 text-muted-foreground hover:text-[#E8621A]"
-                    >
-                      <Link href={`/admin/salespersons/${s.id}`}>
-                        <Eye className="size-4" />
-                      </Link>
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setResetTarget(s)}
-                      title="Reset Password"
-                      className="size-8 text-muted-foreground hover:text-amber-600"
-                    >
-                      <KeyRound className="size-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => toggleMutation.mutate({ id: s.id, currentStatus: s.status })}
-                      title={s.status === "ACTIVE" ? "Suspend Account" : "Activate Account"}
-                      className="size-8 text-muted-foreground hover:text-rose-600"
-                    >
-                      {s.status === "ACTIVE" ? <UserX className="size-4" /> : <UserCheck className="size-4" />}
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="size-8">
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                          <Link href={`/admin/salespersons/${s.id}`}>
+                            <Eye className="size-4 mr-2" />
+                            View
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="cursor-pointer"
+                          onClick={() => setSalespersonToEdit(s)}
+                        >
+                          <Edit className="size-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="cursor-pointer"
+                          onClick={() => setResetTarget(s)}
+                        >
+                          <KeyRound className="size-4 mr-2" />
+                          Reset Password
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="cursor-pointer"
+                          onClick={() => toggleMutation.mutate({ id: s.id, currentStatus: s.status })}
+                        >
+                          {s.status === "ACTIVE" ? <UserX className="size-4 mr-2" /> : <UserCheck className="size-4 mr-2" />}
+                          {s.status === "ACTIVE" ? "Suspend" : "Activate"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="cursor-pointer text-rose-600 focus:text-rose-700"
+                          onClick={() => setSalespersonToDelete({ id: s.id, name: s.name })}
+                        >
+                          <Trash2 className="size-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -206,10 +248,26 @@ export default function AdminSalespersonsPage() {
         />
       </div>
 
-      <CreateSalespersonModal
+      <SalespersonModal
         isOpen={isCreateSheetOpen}
         onClose={() => setIsCreateSheetOpen(false)}
-        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin-salespersons"] })}
+        onSuccess={() => refetch()}
+      />
+
+      <SalespersonModal
+        initialData={salespersonToEdit}
+        isOpen={!!salespersonToEdit}
+        onClose={() => setSalespersonToEdit(null)}
+        onSuccess={() => refetch()}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={!!salespersonToDelete}
+        onClose={() => setSalespersonToDelete(null)}
+        onConfirm={() => salespersonToDelete && deleteMutation.mutate(salespersonToDelete.id)}
+        entityType="salesperson"
+        entityName={salespersonToDelete?.name}
+        isDeleting={deleteMutation.isPending}
       />
 
       <ResetPasswordModal

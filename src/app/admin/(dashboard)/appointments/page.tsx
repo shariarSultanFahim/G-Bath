@@ -3,13 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { Search, Plus, Calendar, CheckCircle2, Clock, XCircle, MoreVertical, CalendarClock, Ban, FileText, Download } from "lucide-react";
+import { Search, Plus, Calendar, CheckCircle2, Clock, XCircle, MoreVertical, CalendarClock, Ban, FileText, Download, Edit, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 
-import { CreateAppointmentModal } from "@/components/admin/create-appointment-modal";
+import { AppointmentModal, AppointmentData } from "@/components/admin/appointment-modal";
 import { RescheduleAppointmentModal } from "@/components/admin/reschedule-appointment-modal";
+import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal";
 import { DataPagination } from "@/components/admin/data-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,8 @@ export default function AdminAppointmentsPage() {
 
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [rescheduleAppointment, setRescheduleAppointment] = useState<AppointmentItem | null>(null);
+  const [appointmentToEdit, setAppointmentToEdit] = useState<AppointmentItem | null>(null);
+  const [appointmentToDelete, setAppointmentToDelete] = useState<AppointmentItem | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -84,6 +87,27 @@ export default function AdminAppointmentsPage() {
     onError: () => {
       toast.error("Failed to cancel appointment");
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/appointments/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to delete appointment");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Appointment deleted successfully");
+      setAppointmentToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    }
   });
 
   return (
@@ -240,6 +264,14 @@ export default function AdminAppointmentsPage() {
                             Reschedule Date
                           </DropdownMenuItem>
 
+                          <DropdownMenuItem
+                            onClick={() => setAppointmentToEdit(appt)}
+                            className="text-xs cursor-pointer"
+                          >
+                            <Edit className="mr-2 size-4" />
+                            Edit
+                          </DropdownMenuItem>
+
                           {pdfUrl ? (
                             <DropdownMenuItem asChild className="text-xs cursor-pointer">
                               <a href={pdfUrl} download>
@@ -263,6 +295,16 @@ export default function AdminAppointmentsPage() {
                           >
                             <Ban className="mr-2 size-4 text-rose-600" />
                             Cancel Appointment
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem
+                            onClick={() => setAppointmentToDelete(appt)}
+                            className="text-xs text-rose-600 cursor-pointer focus:bg-rose-50 focus:text-rose-700"
+                          >
+                            <Trash2 className="mr-2 size-4 text-rose-600" />
+                            Delete Appointment
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -288,9 +330,23 @@ export default function AdminAppointmentsPage() {
         />
       </div>
 
-      <CreateAppointmentModal
+      <AppointmentModal
         isOpen={isCreateSheetOpen}
         onClose={() => setIsCreateSheetOpen(false)}
+        onSuccess={() => refetch()}
+      />
+
+      <AppointmentModal
+        initialData={appointmentToEdit ? {
+          id: appointmentToEdit.id,
+          customerId: appointmentToEdit.customer.id,
+          salespersonId: appointmentToEdit.salesperson.id,
+          date: appointmentToEdit.date,
+          time: appointmentToEdit.time,
+          notes: appointmentToEdit.notes,
+        } : null}
+        isOpen={!!appointmentToEdit}
+        onClose={() => setAppointmentToEdit(null)}
         onSuccess={() => refetch()}
       />
 
@@ -299,6 +355,15 @@ export default function AdminAppointmentsPage() {
         isOpen={!!rescheduleAppointment}
         onClose={() => setRescheduleAppointment(null)}
         onSuccess={() => refetch()}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={!!appointmentToDelete}
+        onClose={() => setAppointmentToDelete(null)}
+        onConfirm={() => appointmentToDelete && deleteMutation.mutate(appointmentToDelete.id)}
+        entityType="appointment"
+        entityName={`Appointment for ${appointmentToDelete?.customer.name}`}
+        isDeleting={deleteMutation.isPending}
       />
     </div>
   );

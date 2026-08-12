@@ -4,10 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { Search, Plus, Eye } from "lucide-react";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 
-import { NewCustomerModal } from "@/components/modals/new-customer-modal";
+import { CustomerModal, CustomerData } from "@/components/modals/customer-modal";
+import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { DataPagination } from "@/components/admin/data-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +40,10 @@ export default function AdminCustomersPage() {
   const [limit, setLimit] = useQueryState("limit", parseAsInteger.withDefault(10));
 
   const [isNewSheetOpen, setIsNewSheetOpen] = useState(false);
+  const [customerToEdit, setCustomerToEdit] = useState<CustomerData | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  const queryClient = useQueryClient();
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin-customers", search, page, limit],
@@ -49,6 +62,28 @@ export default function AdminCustomersPage() {
   const customers: Customer[] = data?.data || [];
   const total = data?.total || 0;
   const totalPages = data?.totalPages || 1;
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/customers/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to delete customer");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Customer deleted successfully");
+      setCustomerToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-customers"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    }
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -120,24 +155,43 @@ export default function AdminCustomersPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">{c.phone}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{c.address || "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{c.address || "N/A"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {c.assessments?.[0]
                       ? format(new Date(c.assessments[0].createdAt), "dd MMM yyyy")
-                      : "—"}
+                      : "N/A"}
                   </TableCell>
                   <TableCell className="font-bold text-xs">{c.assessments?.length || 0}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-muted-foreground hover:text-[#E8621A]"
-                    >
-                      <Link href={`/admin/customers/${c.id}`}>
-                        <Eye className="size-4" />
-                      </Link>
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="size-8">
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                          <Link href={`/admin/customers/${c.id}`}>
+                            <Eye className="size-4 mr-2" />
+                            View
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() => setCustomerToEdit(c)}
+                        >
+                          <Edit className="size-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer text-rose-600 focus:text-rose-700"
+                          onClick={() => setCustomerToDelete({ id: c.id, name: c.name })}
+                        >
+                          <Trash2 className="size-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -159,10 +213,26 @@ export default function AdminCustomersPage() {
         />
       </div>
 
-      <NewCustomerModal
+      <CustomerModal
         isOpen={isNewSheetOpen}
         onClose={() => setIsNewSheetOpen(false)}
         onSuccess={() => refetch()}
+      />
+
+      <CustomerModal
+        initialData={customerToEdit}
+        isOpen={!!customerToEdit}
+        onClose={() => setCustomerToEdit(null)}
+        onSuccess={() => refetch()}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={!!customerToDelete}
+        onClose={() => setCustomerToDelete(null)}
+        onConfirm={() => customerToDelete && deleteMutation.mutate(customerToDelete.id)}
+        entityType="customer"
+        entityName={customerToDelete?.name}
+        isDeleting={deleteMutation.isPending}
       />
     </div>
   );

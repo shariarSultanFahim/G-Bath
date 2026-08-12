@@ -2,9 +2,21 @@
 
 import Link from "next/link";
 import { format } from "date-fns";
-import { Eye, FileText, Search } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Eye, FileText, Search, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useState } from "react";
 import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
+
+import { AssessmentModal, AssessmentData } from "@/components/admin/assessment-modal";
+import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { DataPagination } from "@/components/admin/data-pagination";
 import { Button } from "@/components/ui/button";
@@ -30,6 +42,11 @@ export default function AdminAssessmentsPage() {
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const [limit, setLimit] = useQueryState("limit", parseAsInteger.withDefault(10));
 
+  const [assessmentToEdit, setAssessmentToEdit] = useState<AssessmentData | null>(null);
+  const [assessmentToDelete, setAssessmentToDelete] = useState<AssessmentItem | null>(null);
+
+  const queryClient = useQueryClient();
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin-assessments", search, statusFilter, page, limit],
     queryFn: async () => {
@@ -48,6 +65,26 @@ export default function AdminAssessmentsPage() {
   const assessments: AssessmentItem[] = data?.data || [];
   const total = data?.total || 0;
   const totalPages = data?.totalPages || 1;
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/assessments/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to delete assessment");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Assessment deleted successfully");
+      setAssessmentToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    }
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -160,11 +197,40 @@ export default function AdminAssessmentsPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button asChild variant="ghost" size="sm" className="h-7 text-xs text-[#E8621A]">
-                      <Link href={`/admin/assessments/${ass.id}`}>
-                        <Eye data-icon="inline-start" /> View
-                      </Link>
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button asChild variant="ghost" size="sm" className="h-7 text-xs text-[#E8621A]">
+                        <Link href={`/admin/assessments/${ass.id}`}>
+                          <Eye data-icon="inline-start" /> View
+                        </Link>
+                      </Button>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground">
+                            <MoreVertical className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem
+                            onClick={() => setAssessmentToEdit({ id: ass.id, status: ass.status, pdfUrl: ass.pdfUrl })}
+                            className="text-xs cursor-pointer"
+                          >
+                            <Edit className="mr-2 size-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem
+                            onClick={() => setAssessmentToDelete(ass)}
+                            className="text-xs text-rose-600 cursor-pointer focus:bg-rose-50 focus:text-rose-700"
+                          >
+                            <Trash2 className="mr-2 size-4 text-rose-600" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -185,6 +251,21 @@ export default function AdminAssessmentsPage() {
           }}
         />
       </div>
+
+      <AssessmentModal
+        initialData={assessmentToEdit}
+        isOpen={!!assessmentToEdit}
+        onClose={() => setAssessmentToEdit(null)}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={!!assessmentToDelete}
+        onClose={() => setAssessmentToDelete(null)}
+        onConfirm={() => assessmentToDelete && deleteMutation.mutate(assessmentToDelete.id)}
+        entityType="assessment"
+        entityName={`Assessment for ${assessmentToDelete?.customer.name}`}
+        isDeleting={deleteMutation.isPending}
+      />
     </div>
   );
 }

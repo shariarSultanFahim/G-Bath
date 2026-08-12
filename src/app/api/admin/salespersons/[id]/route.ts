@@ -54,3 +54,28 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: "Failed to update salesperson" }, { status: 500 });
   }
 }
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  // Using same logic as PUT
+  return PUT(req, { params });
+}
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized: Admin only" }, { status: 403 });
+  }
+
+  const { id } = await params;
+  try {
+    await db.$transaction([
+      db.assessment.deleteMany({ where: { salespersonId: id } }),
+      db.appointment.deleteMany({ where: { salespersonId: id } }),
+      db.user.delete({ where: { id } }),
+    ]);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Delete salesperson error:", err);
+    return NextResponse.json({ error: "Failed to delete salesperson" }, { status: 500 });
+  }
+}

@@ -3,9 +3,14 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { ArrowLeft, FileText, Download, Eye } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { PdfPreviewModal } from "@/components/admin/pdf-preview-modal";
+import { AssessmentModal } from "@/components/admin/assessment-modal";
+import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,12 +19,41 @@ export default function AdminAssessmentDetailPage({ params }: { params: Promise<
   const { id } = use(params);
   const [assessment, setAssessment] = useState<any>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  
+  const queryClient = useQueryClient();
+  const router = useRouter();
 
-  useEffect(() => {
+  const fetchAssessment = () => {
     fetch(`/api/assessments/${id}`)
       .then((res) => res.json())
       .then((data) => setAssessment(data));
+  };
+
+  useEffect(() => {
+    fetchAssessment();
   }, [id]);
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/assessments/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to delete assessment");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Assessment deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      router.push("/admin/assessments");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    }
+  });
 
   if (!assessment) return <div className="p-8 text-center text-xs text-muted-foreground">Loading assessment...</div>;
 
@@ -53,8 +87,43 @@ export default function AdminAssessmentDetailPage({ params }: { params: Promise<
           <span className="font-mono text-xs font-bold text-muted-foreground">#{id.slice(-4).toUpperCase()}</span>
           <Badge variant="success">{assessment.status}</Badge>
           {assessment.pdfUrl && <Badge variant="brand">PDF Ready</Badge>}
+          
+          <div className="ml-4 flex items-center gap-2 border-l border-border pl-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditModalOpen(true)}
+              className="h-8 text-xs font-semibold"
+            >
+              <Edit className="size-3.5 mr-1.5" /> Edit
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="h-8 text-xs font-semibold bg-rose-600 hover:bg-rose-700"
+            >
+              <Trash2 className="size-3.5 mr-1.5" /> Delete
+            </Button>
+          </div>
         </div>
       </div>
+
+      <AssessmentModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        initialData={{ id: assessment.id, status: assessment.status, pdfUrl: assessment.pdfUrl }}
+        onSuccess={fetchAssessment}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={() => deleteMutation.mutate()}
+        entityType="assessment"
+        entityName={`Assessment for ${assessment.customer.name}`}
+        isDeleting={deleteMutation.isPending}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Full Assessment Readonly View */}
