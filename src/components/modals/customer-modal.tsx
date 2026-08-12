@@ -93,17 +93,17 @@ export function CustomerModal({ isOpen, onClose, onSuccess, initialData }: Props
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col justify-between">
-        <div>
-          <SheetHeader className="pb-4 border-b border-border">
-            <SheetTitle>{isEditing ? "Edit Customer" : "New Customer"}</SheetTitle>
-            <SheetDescription>
-              {isEditing 
-                ? "Update the details for this customer." 
-                : "Enter client contact details to register a new bathroom renovation customer."}
-            </SheetDescription>
-          </SheetHeader>
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col max-h-screen">
+        <SheetHeader className="pb-4 border-b border-border shrink-0">
+          <SheetTitle>{isEditing ? "Edit Customer" : "New Customer"}</SheetTitle>
+          <SheetDescription>
+            {isEditing 
+              ? "Update the details for this customer." 
+              : "Enter client contact details to register a new bathroom renovation customer."}
+          </SheetDescription>
+        </SheetHeader>
 
+        <div className="flex-1 overflow-y-auto">
           <form id="customer-form" onSubmit={handleSubmit} className="py-6">
             <FieldGroup className="flex flex-col gap-4">
               <Field>
@@ -153,7 +153,7 @@ export function CustomerModal({ isOpen, onClose, onSuccess, initialData }: Props
           </form>
         </div>
 
-        <SheetFooter className="pt-4 border-t border-border flex gap-2">
+        <SheetFooter className="pt-4 border-t border-border flex gap-2 shrink-0">
           <Button variant="outline" type="button" onClick={onClose} className="flex-1">
             Cancel
           </Button>
