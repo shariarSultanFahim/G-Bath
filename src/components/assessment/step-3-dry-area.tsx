@@ -57,11 +57,10 @@ export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
                     }
                     onUpdate({ package: updated.join(", ") });
                   }}
-                  className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${
-                    isChecked
-                      ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
+                  className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${isChecked
+                    ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
                 >
                   <div className="text-xs font-bold text-slate-900">{pkg}</div>
                   {isChecked && <span className="text-[10px] font-semibold text-emerald-600">Selected</span>}
@@ -102,11 +101,10 @@ export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
                     key={style}
                     type="button"
                     onClick={() => onUpdate({ vanityStyle: style })}
-                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
-                      isSelected
-                        ? (style === "None" ? "bg-rose-500 text-white shadow-sm" : "bg-[#C4A47C] text-white shadow-sm")
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
+                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${isSelected
+                      ? (style === "None" ? "bg-rose-500 text-white shadow-sm" : "bg-[#C4A47C] text-white shadow-sm")
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
                   >
                     {style}
                   </button>
@@ -151,7 +149,7 @@ export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
         </div>
 
         <div className={`space-y-6 transition-opacity ${!data.includeMirrorLighting ? 'opacity-40 pointer-events-none' : ''}`}>
-          
+
           {/* Mirror */}
           <div className="space-y-2 pt-1">
             <h4 className="text-[11px] font-semibold text-slate-700">Mirror:</h4>
@@ -161,11 +159,10 @@ export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
                 <div
                   key={m}
                   onClick={() => onUpdate({ mirror: m })}
-                  className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${
-                    isSelected
-                      ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
+                  className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${isSelected
+                    ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
                 >
                   <div className="text-xs font-bold text-slate-900">{m}</div>
                   {isSelected && <span className="text-[10px] font-semibold text-emerald-600">Selected</span>}
@@ -178,18 +175,17 @@ export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
           <div className="space-y-2">
             <h4 className="text-[11px] font-semibold text-slate-700">Vanity Lighting:</h4>
             <div className="flex gap-2">
-              {["Pendant Style", "LED"].map((l) => {
+              {["None", "Pendant Style", "LED"].map((l) => {
                 const isSelected = data.vanityLighting === l;
                 return (
                   <button
                     key={l}
                     type="button"
                     onClick={() => onUpdate({ vanityLighting: l })}
-                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
-                      isSelected
-                        ? "bg-[#C4A47C] text-white shadow-sm"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
+                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${isSelected
+                      ? (l === "None" ? "bg-rose-500 text-white shadow-sm" : "bg-[#C4A47C] text-white shadow-sm")
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
                   >
                     {l}
                   </button>
@@ -202,18 +198,17 @@ export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
           <div className="space-y-2">
             <h4 className="text-[11px] font-semibold text-slate-700">Upgrade Lighting:</h4>
             <div className="flex gap-2">
-              {["POT Lights", "LED"].map((l) => {
+              {["None", "POT Lights", "LED"].map((l) => {
                 const isSelected = data.upgradeLighting === l;
                 return (
                   <button
                     key={l}
                     type="button"
                     onClick={() => onUpdate({ upgradeLighting: l })}
-                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
-                      isSelected
-                        ? "bg-[#C4A47C] text-white shadow-sm"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
+                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${isSelected
+                      ? (l === "None" ? "bg-rose-500 text-white shadow-sm" : "bg-[#C4A47C] text-white shadow-sm")
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
                   >
                     {l}
                   </button>
@@ -233,11 +228,10 @@ export function Step3DryArea({ data, onUpdate, onNext, onPrev }: Props) {
                     key={finish}
                     type="button"
                     onClick={() => onUpdate({ towelBars: finish })}
-                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
-                      isSelected
-                        ? (finish === "None" ? "bg-rose-500 text-white shadow-sm" : "bg-[#C4A47C] text-white shadow-sm")
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
+                    className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${isSelected
+                      ? (finish === "None" ? "bg-rose-500 text-white shadow-sm" : "bg-[#C4A47C] text-white shadow-sm")
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
                   >
                     {finish}
                   </button>
