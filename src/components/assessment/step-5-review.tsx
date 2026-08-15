@@ -152,7 +152,16 @@ export function Step5Review({
         <div className="space-y-2 text-xs">
           <div className="flex justify-between"><span className="text-slate-500">Flooring</span><span className="font-semibold">{stepTiledDry.flooringSelection || "—"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Toilet</span><span className="font-semibold">{stepTiledDry.toiletSelection || "—"}</span></div>
-          <div className="flex justify-between"><span className="text-slate-500">Vanity</span><span className="font-semibold">{stepTiledDry.vanityStyle ? `${stepTiledDry.vanityStyle} (${stepTiledDry.vanitySize || ""})` : "—"}</span></div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Vanity</span>
+            <span className="font-semibold">
+              {!stepTiledDry.includeVanity || stepTiledDry.vanityStyle === "None"
+                ? "None"
+                : stepTiledDry.vanityStyle
+                ? `${stepTiledDry.vanityStyle}${stepTiledDry.vanitySize ? ` (${stepTiledDry.vanitySize})` : ""}`
+                : "—"}
+            </span>
+          </div>
           <div className="flex justify-between"><span className="text-slate-500">Mirror</span><span className="font-semibold">{stepTiledDry.mirrorChoice || "—"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Lighting</span><span className="font-semibold">{stepTiledDry.lightingChoice || "—"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Towel Bar Finish</span><span className="font-semibold">{stepTiledDry.towelBarFinish || "—"}</span></div>

@@ -261,7 +261,9 @@ export function AssessmentPDFDocument({ data, logoBase64 }: { data: PDFData; log
               <View style={styles.row}>
                 <Text style={styles.label}>Vanity Selection:</Text>
                 <Text style={styles.value}>
-                  Style: {data.tiledDryArea.vanityStyle || "N/A"} · Size: {data.tiledDryArea.vanitySize || "N/A"}
+                  {data.tiledDryArea.vanityStyle === "None"
+                    ? "None"
+                    : `Style: ${data.tiledDryArea.vanityStyle || "N/A"}${data.tiledDryArea.vanitySize ? ` · Size: ${data.tiledDryArea.vanitySize}` : ""}`}
                 </Text>
               </View>
             )}

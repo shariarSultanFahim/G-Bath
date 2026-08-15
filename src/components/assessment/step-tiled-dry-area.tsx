@@ -235,6 +235,8 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
                         if (VANITY_STYLES.slice(0, 3).includes(data.vanityStyle)) {
                           onUpdate({ vanityStyle: "" });
                         }
+                      } else if (style === "None") {
+                        onUpdate({ vanityStyle: "None", vanitySize: "" });
                       } else {
                         onUpdate({ vanityStyle: style });
                       }
