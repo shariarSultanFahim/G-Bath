@@ -60,13 +60,17 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized: Admin only" }, { status: 403 });
+  if (!user || (user.role !== "ADMIN" && user.role !== "SELLER")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   try {
     const body = await req.json();
-    const { customerId, salespersonId, date, time, notes } = body;
+    let { customerId, salespersonId, date, time, notes } = body;
+
+    if (user.role === "SELLER") {
+      salespersonId = user.id;
+    }
 
     if (!customerId || !salespersonId || !date || !time) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -86,19 +90,32 @@ export async function POST(req: Request) {
       },
     });
 
-    // Create & Broadcast real-time notification for assigned SELLER
-    const notif = await db.notification.create({
-      data: {
-        userId: salespersonId,
-        role: "SELLER",
-        title: "New Appointment Assigned",
-        message: `Appointment scheduled with ${appointment.customer.name} on ${time}`,
-        link: `/appointments/${appointment.id}`,
-        type: "NEW_APPOINTMENT",
-      },
-    });
-
-    notificationEmitter.emit("notification", notif);
+    if (user.role === "ADMIN") {
+      // Create & Broadcast real-time notification for assigned SELLER
+      const notif = await db.notification.create({
+        data: {
+          userId: salespersonId,
+          role: "SELLER",
+          title: "New Appointment Assigned",
+          message: `Appointment scheduled with ${appointment.customer.name} on ${time}`,
+          link: `/appointments/${appointment.id}`,
+          type: "NEW_APPOINTMENT",
+        },
+      });
+      notificationEmitter.emit("notification", notif);
+    } else {
+      // Create & Broadcast real-time notification for ADMIN
+      const notif = await db.notification.create({
+        data: {
+          role: "ADMIN",
+          title: "New Appointment Created",
+          message: `${appointment.salesperson.name} scheduled an appointment with ${appointment.customer.name} on ${time}`,
+          link: `/admin/appointments`,
+          type: "NEW_APPOINTMENT",
+        },
+      });
+      notificationEmitter.emit("notification", notif);
+    }
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (err) {

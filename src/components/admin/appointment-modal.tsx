@@ -31,11 +31,20 @@ interface Props {
   onClose: () => void;
   onSuccess?: () => void;
   initialData?: AppointmentData | null;
+  fixedSalespersonId?: string;
+  hideSalespersonSelect?: boolean;
 }
 
-export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Props) {
+export function AppointmentModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialData,
+  fixedSalespersonId,
+  hideSalespersonSelect = false,
+}: Props) {
   const [customerId, setCustomerId] = useState("");
-  const [salespersonId, setSalespersonId] = useState("");
+  const [salespersonId, setSalespersonId] = useState(fixedSalespersonId || "");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("10:00 AM");
   const [notes, setNotes] = useState("");
@@ -47,18 +56,18 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Pr
   useEffect(() => {
     if (initialData && isOpen) {
       setCustomerId(initialData.customerId || "");
-      setSalespersonId(initialData.salespersonId || "");
+      setSalespersonId(initialData.salespersonId || fixedSalespersonId || "");
       setDate(initialData.date ? initialData.date.split("T")[0] : "");
       setTime(initialData.time || "10:00 AM");
       setNotes(initialData.notes || "");
     } else if (isOpen && !initialData) {
       setCustomerId("");
-      setSalespersonId("");
+      setSalespersonId(fixedSalespersonId || "");
       setDate("");
       setTime("10:00 AM");
       setNotes("");
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, fixedSalespersonId]);
 
   // Fetch Customers for Searchable Combobox
   const { data: customersData, isLoading: loadingCustomers } = useQuery({
@@ -71,7 +80,8 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Pr
     enabled: isOpen,
   });
 
-  // Fetch Salespersons for Searchable Combobox
+  // Fetch Salespersons for Searchable Combobox (only if selecting salesperson is allowed)
+  const shouldFetchSalespersons = isOpen && !hideSalespersonSelect && !fixedSalespersonId;
   const { data: salespersonsData, isLoading: loadingSalespersons } = useQuery({
     queryKey: ["admin-salespersons-all"],
     queryFn: async () => {
@@ -79,7 +89,7 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Pr
       if (!res.ok) throw new Error("Failed to fetch salespersons");
       return res.json();
     },
-    enabled: isOpen,
+    enabled: shouldFetchSalespersons,
   });
 
   const customersList: Array<{ id: string; name: string; phone: string; address?: string }> =
@@ -119,7 +129,7 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Pr
       toast.error("Please select a customer");
       return;
     }
-    if (!salespersonId) {
+    if (!salespersonId && !hideSalespersonSelect && !fixedSalespersonId) {
       toast.error("Please select a salesperson");
       return;
     }
@@ -139,7 +149,7 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Pr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId,
-          salespersonId,
+          ...(salespersonId ? { salespersonId } : {}),
           date,
           time,
           notes,
@@ -152,10 +162,12 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Pr
       } else {
         toast.success(`Appointment ${isEditing ? "updated" : "scheduled"} successfully!`);
         queryClient.invalidateQueries({ queryKey: ["admin-appointments"] });
+        queryClient.invalidateQueries({ queryKey: ["seller-appointments"] });
         queryClient.invalidateQueries({ queryKey: ["appointments"] });
         queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
         if (isEditing && initialData?.id) {
           queryClient.invalidateQueries({ queryKey: ["admin-appointment", initialData.id] });
+          queryClient.invalidateQueries({ queryKey: ["appointment", initialData.id] });
         }
         onClose();
         onSuccess?.();
@@ -176,6 +188,8 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Pr
             <SheetDescription>
               {isEditing 
                 ? "Update the details for this appointment."
+                : hideSalespersonSelect
+                ? "Schedule a client visit for a bathroom assessment."
                 : "Assign a salesperson to visit a client for a bathroom assessment."}
             </SheetDescription>
           </SheetHeader>
@@ -195,18 +209,20 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Pr
                 />
               </Field>
 
-              {/* Searchable Salesperson Combobox */}
-              <Field>
-                <FieldLabel>Salesperson</FieldLabel>
-                <SearchableSelect
-                  options={salespersonOptions}
-                  value={salespersonId}
-                  onChange={setSalespersonId}
-                  placeholder="Select salesperson..."
-                  searchPlaceholder="Type seller name or email..."
-                  loading={loadingSalespersons}
-                />
-              </Field>
+              {/* Searchable Salesperson Combobox - hidden if seller or fixed */}
+              {!hideSalespersonSelect && (
+                <Field>
+                  <FieldLabel>Salesperson</FieldLabel>
+                  <SearchableSelect
+                    options={salespersonOptions}
+                    value={salespersonId}
+                    onChange={setSalespersonId}
+                    placeholder="Select salesperson..."
+                    searchPlaceholder="Type seller name or email..."
+                    loading={loadingSalespersons}
+                  />
+                </Field>
+              )}
 
               {/* Date */}
               <Field>
@@ -230,6 +246,18 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, initialData }: Pr
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
                   placeholder="e.g. 10:00 AM"
+                />
+              </Field>
+
+              {/* Notes */}
+              <Field>
+                <FieldLabel htmlFor="appt-notes">Notes (Optional)</FieldLabel>
+                <Input
+                  id="appt-notes"
+                  type="text"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="e.g. Assessment and measurement discussion"
                 />
               </Field>
             </FieldGroup>
