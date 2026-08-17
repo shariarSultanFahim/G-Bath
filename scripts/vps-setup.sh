@@ -38,7 +38,7 @@ docker compose version
 
 echo "==> Installing Nginx + Certbot"
 apt install -y nginx certbot python3-certbot-nginx
-systemctl enable nginx
+systemctl enable nginxjj
 systemctl start nginx
 
 echo "==> Creating app directory ${APP_DIR}"
