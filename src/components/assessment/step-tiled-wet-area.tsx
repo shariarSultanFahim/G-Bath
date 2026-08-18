@@ -56,19 +56,21 @@ const WET_UPGRADES_OPTIONS = [
 export function StepTiledWetArea({ data, onUpdate, onNext, onPrev }: Props) {
   const handleSelectType = (type: string) => {
     if (data.bathOrShower === type) {
-      onUpdate({ bathOrShower: "" });
+      onUpdate({ bathOrShower: "", includeBathOrShower: false });
     } else {
-      onUpdate({ bathOrShower: type });
+      onUpdate({ bathOrShower: type, includeBathOrShower: true });
     }
   };
 
   const toggleUpgrade = (upgradeId: string) => {
     const current = data.upgrades || [];
+    let updated: string[];
     if (current.includes(upgradeId)) {
-      onUpdate({ upgrades: current.filter((item) => item !== upgradeId) });
+      updated = current.filter((item) => item !== upgradeId);
     } else {
-      onUpdate({ upgrades: [...current, upgradeId] });
+      updated = [...current, upgradeId];
     }
+    onUpdate({ upgrades: updated, includeUpgrades: updated.length > 0 });
   };
 
   return (
@@ -76,11 +78,11 @@ export function StepTiledWetArea({ data, onUpdate, onNext, onPrev }: Props) {
       {/* Title / Section Card */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-900">Tile Wet Area</h2>
-          <Switch checked={data.includeBathOrShower} onCheckedChange={(c) => onUpdate({ includeBathOrShower: c })} />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Tiled Wet Area</h2>
+          <p className="text-xs text-slate-400">Tap to select / deselect</p>
         </div>
 
-        <div className={`space-y-4 transition-opacity ${!data.includeBathOrShower ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className="space-y-4">
           {/* Bath or Shower? */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-900">Bath or Shower?</label>
@@ -150,18 +152,23 @@ export function StepTiledWetArea({ data, onUpdate, onNext, onPrev }: Props) {
       {/* Upgrades */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-base font-bold text-slate-900">Upgrades</h3>
-          <Switch checked={data.includeUpgrades} onCheckedChange={(c) => onUpdate({ includeUpgrades: c })} />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Upgrades</h3>
+          <p className="text-xs text-slate-400">Tap to select / deselect</p>
         </div>
 
-        <div className={`space-y-4 transition-opacity ${!data.includeUpgrades ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className="space-y-4">
           <div className="space-y-3">
             {WET_UPGRADES_OPTIONS.map((item) => {
               const isChecked = (data.upgrades || []).includes(item.id);
               return (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/40 p-3.5"
+                  onClick={() => toggleUpgrade(item.id)}
+                  className={`cursor-pointer flex items-center justify-between rounded-2xl border p-3.5 transition-all ${
+                    isChecked
+                      ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
                 >
                   <div className="space-y-0.5">
                     <div className="text-xs font-bold text-slate-900">{item.title}</div>
@@ -189,12 +196,12 @@ export function StepTiledWetArea({ data, onUpdate, onNext, onPrev }: Props) {
 
       {/* Notes */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-2">
-        <h3 className="text-base font-bold text-slate-900">Notes</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Tiled Wet Area Notes</h3>
         <textarea
           rows={3}
           value={data.notes}
           onChange={(e) => onUpdate({ notes: e.target.value })}
-          placeholder="Enter notes about this tile wet area..."
+          placeholder="Enter overall notes about this tile wet area..."
           className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
         />
       </div>

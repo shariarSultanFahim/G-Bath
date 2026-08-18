@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Camera, Upload, UserCheck, X } from "lucide-react";
+import { Camera, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 export interface Step1Data {
@@ -55,8 +55,8 @@ export function Step1Assess({
         const list = Array.isArray(resData)
           ? resData
           : Array.isArray(resData?.data)
-          ? resData.data
-          : [];
+            ? resData.data
+            : [];
         setCustomers(list);
       })
       .catch(console.error);
@@ -218,7 +218,7 @@ export function Step1Assess({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
               Existing Flooring SQ FT
@@ -236,21 +236,61 @@ export function Step1Assess({
             <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1">
               Flooring Material
             </label>
-            <div className="flex gap-3 pt-1">
-              {["Tile", "Acrylic"].map((mat) => (
-                <label key={mat} className="flex items-center gap-1.5 text-xs font-medium text-slate-700 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="flooringMaterial"
-                    value={mat}
-                    checked={data.flooringMaterial === mat}
-                    onChange={(e) => onUpdate({ flooringMaterial: e.target.value })}
-                    className="accent-[#E8621A]"
-                  />
-                  {mat}
-                </label>
-              ))}
+            <div className="flex flex-wrap gap-2 pt-1">
+              {["Tile", "Acrylic", "Other"].map((mat) => {
+                const isOther = mat === "Other";
+                const isSelected = isOther
+                  ? Boolean(data.flooringMaterial && data.flooringMaterial !== "Tile" && data.flooringMaterial !== "Acrylic")
+                  : data.flooringMaterial === mat;
+
+                return (
+                  <button
+                    key={mat}
+                    type="button"
+                    onClick={() => {
+                      if (isOther) {
+                        if (isSelected) {
+                          onUpdate({ flooringMaterial: "" });
+                        } else {
+                          onUpdate({ flooringMaterial: "Other" });
+                        }
+                      } else {
+                        if (isSelected) {
+                          onUpdate({ flooringMaterial: "" });
+                        } else {
+                          onUpdate({ flooringMaterial: mat });
+                        }
+                      }
+                    }}
+                    className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+                      isSelected
+                        ? "bg-[#E8621A] text-white shadow-sm"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    {mat}
+                  </button>
+                );
+              })}
             </div>
+
+            {/* If Other or custom material is selected, show custom input */}
+            {Boolean(
+              data.flooringMaterial &&
+              data.flooringMaterial !== "Tile" &&
+              data.flooringMaterial !== "Acrylic"
+            ) && (
+              <div className="mt-2">
+                <input
+                  type="text"
+                  value={data.flooringMaterial === "Other" ? "" : data.flooringMaterial}
+                  onChange={(e) => onUpdate({ flooringMaterial: e.target.value || "Other" })}
+                  placeholder="Specify other flooring material..."
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
+                  autoFocus
+                />
+              </div>
+            )}
           </div>
         </div>
 

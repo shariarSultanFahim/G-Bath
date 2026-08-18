@@ -78,7 +78,8 @@ export function Step2WetArea({
     } else {
       newList = [...currentList, door];
     }
-    onUpdateStep4({ glassDoor: newList.join(", ") });
+    const joined = newList.join(", ");
+    onUpdateStep4({ glassDoor: joined, includeGlassDoor: Boolean(joined) });
   };
 
   const toggleAcrylicPanel = (panel: string) => {
@@ -89,29 +90,43 @@ export function Step2WetArea({
     } else {
       newList = [...currentList, panel];
     }
-    onUpdate({ acrylicTilePanel: newList.join(", ") });
+    const joined = newList.join(", ");
+    onUpdate({ acrylicTilePanel: joined, includeAcrylicTilePanel: Boolean(joined) });
   };
 
   return (
     <div className="space-y-5">
       {/* Wet Area Package */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-4">
-        <h3 className="text-xs font-bold text-slate-900">Wet Area Package</h3>
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider text-slate-400">Wet Area Package</h3>
 
         {/* Bath Section */}
         <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 space-y-2">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-slate-900">Include Bath</h4>
-            <Switch checked={data.includeBath} onCheckedChange={(c) => onUpdate({ includeBath: c })} />
+            <h4 className="text-sm font-bold text-slate-900">Bath Details</h4>
+            {data.bathDetails && (
+              <button
+                type="button"
+                onClick={() => onUpdate({ bathDetails: "", includeBath: false })}
+                className="text-[11px] font-semibold text-rose-500 hover:underline"
+              >
+                Clear
+              </button>
+            )}
           </div>
 
-          <div className={`transition-opacity ${!data.includeBath ? 'opacity-40 pointer-events-none' : ''}`}>
+          <div>
             <input
               type="text"
               value={data.bathDetails}
-              onChange={(e) => onUpdate({ bathDetails: e.target.value })}
-              placeholder="Bath details..."
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
+              onChange={(e) =>
+                onUpdate({
+                  bathDetails: e.target.value,
+                  includeBath: Boolean(e.target.value.trim()),
+                })
+              }
+              placeholder="Enter bath details (e.g. Standard 5ft Acrylic Bath)..."
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
             />
           </div>
         </div>
@@ -119,17 +134,30 @@ export function Step2WetArea({
         {/* Shower Section */}
         <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 space-y-2">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-slate-900">Include Shower</h4>
-            <Switch checked={data.includeShower} onCheckedChange={(c) => onUpdate({ includeShower: c })} />
+            <h4 className="text-sm font-bold text-slate-900">Shower Details</h4>
+            {data.showerDetails && (
+              <button
+                type="button"
+                onClick={() => onUpdate({ showerDetails: "", includeShower: false })}
+                className="text-[11px] font-semibold text-rose-500 hover:underline"
+              >
+                Clear
+              </button>
+            )}
           </div>
 
-          <div className={`transition-opacity ${!data.includeShower ? 'opacity-40 pointer-events-none' : ''}`}>
+          <div>
             <input
               type="text"
               value={data.showerDetails}
-              onChange={(e) => onUpdate({ showerDetails: e.target.value })}
-              placeholder="Shower details..."
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
+              onChange={(e) =>
+                onUpdate({
+                  showerDetails: e.target.value,
+                  includeShower: Boolean(e.target.value.trim()),
+                })
+              }
+              placeholder="Enter shower details (e.g. 36x36 Acrylic Shower Base)..."
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#E8621A] focus:outline-none"
             />
           </div>
         </div>
@@ -138,11 +166,11 @@ export function Step2WetArea({
       {/* Glass Door (under Wet Area Package) */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
         <div className="flex justify-between items-center">
-          <h3 className="text-xs font-bold text-slate-900">Glass Door</h3>
-          <Switch checked={includeGlassDoor} onCheckedChange={(c) => onUpdateStep4({ includeGlassDoor: c })} />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Glass Door</h3>
+          <p className="text-xs text-slate-400">Tap to select / deselect</p>
         </div>
 
-        <div className={`space-y-2 pt-1 transition-opacity ${!includeGlassDoor ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className="space-y-2 pt-1">
           {GLASS_DOOR_OPTIONS.map((door) => {
             const currentList = glassDoor ? glassDoor.split(", ").filter(Boolean) : [];
             const isSelected = currentList.includes(door);
@@ -167,11 +195,11 @@ export function Step2WetArea({
       {/* Acrylic Tile Panel System */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
         <div className="flex justify-between items-center">
-          <h3 className="text-xs font-bold text-slate-900">Acrylic Tile Panel System</h3>
-          <Switch checked={data.includeAcrylicTilePanel} onCheckedChange={(c) => onUpdate({ includeAcrylicTilePanel: c })} />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Acrylic Tile Panel System</h3>
+          <p className="text-xs text-slate-400">Tap to select / deselect</p>
         </div>
 
-        <div className={`space-y-2 pt-1 transition-opacity ${!data.includeAcrylicTilePanel ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className="space-y-2 pt-1">
           {ACRYLIC_PANELS.map((panel) => {
             const currentList = data.acrylicTilePanel ? data.acrylicTilePanel.split(", ").filter(Boolean) : [];
             const isSelected = currentList.includes(panel);
@@ -195,14 +223,19 @@ export function Step2WetArea({
 
       {/* Package Upgrades */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
-        <h3 className="text-base font-bold text-slate-900">Package Upgrades</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Package Upgrades</h3>
         <div className="space-y-3">
           {UPGRADES_LIST.map((item) => {
             const isChecked = packageUpgrades.includes(item);
             return (
               <div
                 key={item}
-                className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/40 p-3.5"
+                onClick={() => toggleUpgrade(item)}
+                className={`cursor-pointer flex items-center justify-between rounded-2xl border p-3.5 transition-all ${
+                  isChecked
+                    ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
               >
                 <div className="text-xs font-bold text-slate-900">{item}</div>
                 <Switch checked={isChecked} onCheckedChange={() => toggleUpgrade(item)} />
@@ -214,12 +247,12 @@ export function Step2WetArea({
 
       {/* Notes */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-2">
-        <h3 className="text-base font-bold text-slate-900">Notes</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Wet Area Notes</h3>
         <textarea
           rows={3}
           value={data.notes}
           onChange={(e) => onUpdate({ notes: e.target.value })}
-          placeholder="Additional observations..."
+          placeholder="Additional observations about wet area..."
           className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
         />
       </div>

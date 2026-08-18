@@ -92,9 +92,9 @@ export async function POST(req: Request) {
 
     const cleanWetArea = wetArea
       ? {
-          includeBath: Boolean(wetArea.includeBath),
+          includeBath: Boolean(wetArea.includeBath || wetArea.bathDetails),
           bathDetails: wetArea.bathDetails || undefined,
-          includeShower: Boolean(wetArea.includeShower),
+          includeShower: Boolean(wetArea.includeShower || wetArea.showerDetails),
           showerDetails: wetArea.showerDetails || undefined,
           acrylicTilePanel: wetArea.acrylicTilePanel || undefined,
           notes: wetArea.notes || undefined,
@@ -105,7 +105,9 @@ export async function POST(req: Request) {
       ? {
           bathOrShower: tiledWetArea.bathOrShower || undefined,
           wetAreaSize: tiledWetArea.wetAreaSize || undefined,
+          bathOrShowerNotes: tiledWetArea.bathOrShowerNotes || undefined,
           upgrades: Array.isArray(tiledWetArea.upgrades) ? tiledWetArea.upgrades : [],
+          upgradesNotes: tiledWetArea.upgradesNotes || undefined,
           notes: tiledWetArea.notes || undefined,
         }
       : undefined;
@@ -113,13 +115,16 @@ export async function POST(req: Request) {
     const cleanDryArea = dryArea
       ? {
           package: dryArea.package || undefined,
+          packageNotes: dryArea.packageNotes || undefined,
           vanityStyle: dryArea.vanityStyle || undefined,
           vanityDetails: dryArea.vanityDetails || undefined,
+          vanityNotes: dryArea.vanityNotes || undefined,
           packageUpgrades: Array.isArray(dryArea.packageUpgrades) ? dryArea.packageUpgrades : [],
           mirror: dryArea.mirror || undefined,
           vanityLighting: dryArea.vanityLighting || undefined,
           upgradeLighting: dryArea.upgradeLighting || undefined,
           towelBars: dryArea.towelBars || undefined,
+          mirrorLightingNotes: dryArea.mirrorLightingNotes || undefined,
           comments: dryArea.comments || undefined,
         }
       : undefined;
@@ -129,12 +134,16 @@ export async function POST(req: Request) {
           flooringSelection: tiledDryArea.flooringSelection || undefined,
           flooringNotes: tiledDryArea.flooringNotes || undefined,
           toiletSelection: tiledDryArea.toiletSelection || undefined,
+          toiletNotes: tiledDryArea.toiletNotes || undefined,
           vanityStyle: tiledDryArea.vanityStyle || undefined,
           vanitySize: tiledDryArea.vanitySize || undefined,
+          vanityNotes: tiledDryArea.vanityNotes || undefined,
           mirrorChoice: tiledDryArea.mirrorChoice || undefined,
           lightingChoice: tiledDryArea.lightingChoice || undefined,
           towelBarFinish: tiledDryArea.towelBarFinish || undefined,
+          mirrorLightingNotes: tiledDryArea.mirrorLightingNotes || undefined,
           upgrades: Array.isArray(tiledDryArea.upgrades) ? tiledDryArea.upgrades : [],
+          upgradesNotes: tiledDryArea.upgradesNotes || undefined,
           notes: tiledDryArea.notes || undefined,
         }
       : undefined;
@@ -152,9 +161,23 @@ export async function POST(req: Request) {
       ])
     );
 
+    let salespersonId = user.id;
+    const userInDb = await db.user.findUnique({ where: { id: salespersonId } });
+    if (!userInDb) {
+      const fallbackUser = await db.user.findFirst();
+      if (fallbackUser) {
+        salespersonId = fallbackUser.id;
+      } else {
+        return NextResponse.json(
+          { error: "No user found in database. Please seed the database or re-login." },
+          { status: 400 }
+        );
+      }
+    }
+
     const dataPayload: Prisma.AssessmentUncheckedCreateInput = {
       customerId,
-      salespersonId: user.id,
+      salespersonId,
       existingBathroom: cleanExistingBathroom,
       wetArea: cleanWetArea,
       tiledWetArea: cleanTiledWetArea,
@@ -178,8 +201,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(assessment, { status: 201 });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Create assessment error:", err);
-    return NextResponse.json({ error: "Failed to create assessment" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || "Failed to create assessment" }, { status: 500 });
   }
 }

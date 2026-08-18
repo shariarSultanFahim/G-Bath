@@ -47,9 +47,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     if (wetArea) {
       dataPayload.wetArea = {
-        includeBath: Boolean(wetArea.includeBath),
+        includeBath: Boolean(wetArea.includeBath || wetArea.bathDetails),
         bathDetails: wetArea.bathDetails || undefined,
-        includeShower: Boolean(wetArea.includeShower),
+        includeShower: Boolean(wetArea.includeShower || wetArea.showerDetails),
         showerDetails: wetArea.showerDetails || undefined,
         acrylicTilePanel: wetArea.acrylicTilePanel || undefined,
         notes: wetArea.notes || undefined,
@@ -60,7 +60,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       dataPayload.tiledWetArea = {
         bathOrShower: tiledWetArea.bathOrShower || undefined,
         wetAreaSize: tiledWetArea.wetAreaSize || undefined,
+        bathOrShowerNotes: tiledWetArea.bathOrShowerNotes || undefined,
         upgrades: Array.isArray(tiledWetArea.upgrades) ? tiledWetArea.upgrades : [],
+        upgradesNotes: tiledWetArea.upgradesNotes || undefined,
         notes: tiledWetArea.notes || undefined,
       };
     }
@@ -68,13 +70,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (dryArea) {
       dataPayload.dryArea = {
         package: dryArea.package || undefined,
+        packageNotes: dryArea.packageNotes || undefined,
         vanityStyle: dryArea.vanityStyle || undefined,
         vanityDetails: dryArea.vanityDetails || undefined,
+        vanityNotes: dryArea.vanityNotes || undefined,
         packageUpgrades: Array.isArray(dryArea.packageUpgrades) ? dryArea.packageUpgrades : [],
         mirror: dryArea.mirror || undefined,
         vanityLighting: dryArea.vanityLighting || undefined,
         upgradeLighting: dryArea.upgradeLighting || undefined,
         towelBars: dryArea.towelBars || undefined,
+        mirrorLightingNotes: dryArea.mirrorLightingNotes || undefined,
         comments: dryArea.comments || undefined,
       };
     }
@@ -84,12 +89,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         flooringSelection: tiledDryArea.flooringSelection || undefined,
         flooringNotes: tiledDryArea.flooringNotes || undefined,
         toiletSelection: tiledDryArea.toiletSelection || undefined,
+        toiletNotes: tiledDryArea.toiletNotes || undefined,
         vanityStyle: tiledDryArea.vanityStyle || undefined,
         vanitySize: tiledDryArea.vanitySize || undefined,
+        vanityNotes: tiledDryArea.vanityNotes || undefined,
         mirrorChoice: tiledDryArea.mirrorChoice || undefined,
         lightingChoice: tiledDryArea.lightingChoice || undefined,
         towelBarFinish: tiledDryArea.towelBarFinish || undefined,
+        mirrorLightingNotes: tiledDryArea.mirrorLightingNotes || undefined,
         upgrades: Array.isArray(tiledDryArea.upgrades) ? tiledDryArea.upgrades : [],
+        upgradesNotes: tiledDryArea.upgradesNotes || undefined,
         notes: tiledDryArea.notes || undefined,
       };
     }
@@ -116,9 +125,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     });
 
     return NextResponse.json(updated);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Update assessment error:", err);
-    return NextResponse.json({ error: "Failed to update assessment" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || "Failed to update assessment" }, { status: 500 });
   }
 }
 

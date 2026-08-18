@@ -48,7 +48,6 @@ const VANITY_STYLES = ["None", "Modern", "Traditional", "Custom"];
 const VANITY_SIZES = ['24"', '30"', '36"', '42"', '48"', '54"', '60"', '72"', "Custom"];
 
 const MIRROR_OPTIONS = [
-  { id: "None", title: "None", subtext: "No mirror selected" },
   { id: "Standard Framed", title: "Standard Framed", subtext: "Classic design • Multiple frame colors" },
   { id: "Frameless", title: "Frameless", subtext: "Modern • Beveled edges • Clean look" },
   { id: "Smart Mirror", title: "Smart Mirror", subtext: "Anti-fog • Touch lighting • Bluetooth speaker" },
@@ -58,13 +57,12 @@ const MIRROR_OPTIONS = [
 ];
 
 const LIGHTING_OPTIONS = [
-  { id: "None", title: "None", subtext: "" },
   { id: "LED Modern Light Bar", title: "LED Modern Light Bar", subtext: "" },
   { id: "LED Traditional Light Bar", title: "LED Traditional Light Bar", subtext: "" },
   { id: "Wall Sconce (Pair)", title: "Wall Sconce (Pair)", subtext: "" },
 ];
 
-const TOWEL_BAR_FINISHES = ["None", "Chrome", "Black"];
+const TOWEL_BAR_FINISHES = ["Chrome", "Black", "Brushed Nickel", "Matte Black"];
 
 const DRY_UPGRADES_OPTIONS = [
   { id: "Premium Vanity", title: "Premium Vanity", subtext: "Soft-Close • Marble Top • Dual Sinks" },
@@ -76,38 +74,91 @@ const DRY_UPGRADES_OPTIONS = [
 ];
 
 export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
+  const toggleFlooring = (id: string) => {
+    if (data.flooringSelection === id) {
+      onUpdate({ flooringSelection: "", includeFlooring: false });
+    } else {
+      onUpdate({ flooringSelection: id, includeFlooring: true });
+    }
+  };
+
+  const toggleToilet = (id: string) => {
+    if (data.toiletSelection === id) {
+      onUpdate({ toiletSelection: "", includeToilet: false });
+    } else {
+      onUpdate({ toiletSelection: id, includeToilet: true });
+    }
+  };
+
+  const toggleMirrorChoice = (id: string) => {
+    const selected = data.mirrorChoice ? data.mirrorChoice.split(", ").filter(Boolean) : [];
+    let updated: string[];
+    if (selected.includes(id)) {
+      updated = selected.filter((m) => m !== id);
+    } else {
+      updated = [...selected, id];
+    }
+    const joined = updated.join(", ");
+    onUpdate({ mirrorChoice: joined, includeMirrorLighting: Boolean(joined || data.lightingChoice || data.towelBarFinish) });
+  };
+
+  const toggleLightingChoice = (id: string) => {
+    const selected = data.lightingChoice ? data.lightingChoice.split(", ").filter(Boolean) : [];
+    let updated: string[];
+    if (selected.includes(id)) {
+      updated = selected.filter((l) => l !== id);
+    } else {
+      updated = [...selected, id];
+    }
+    const joined = updated.join(", ");
+    onUpdate({ lightingChoice: joined, includeMirrorLighting: Boolean(data.mirrorChoice || joined || data.towelBarFinish) });
+  };
+
+  const toggleTowelBarFinish = (finish: string) => {
+    const selected = data.towelBarFinish ? data.towelBarFinish.split(", ").filter(Boolean) : [];
+    let updated: string[];
+    if (selected.includes(finish)) {
+      updated = selected.filter((f) => f !== finish);
+    } else {
+      updated = [...selected, finish];
+    }
+    const joined = updated.join(", ");
+    onUpdate({ towelBarFinish: joined, includeMirrorLighting: Boolean(data.mirrorChoice || data.lightingChoice || joined) });
+  };
+
   const toggleUpgrade = (upgradeId: string) => {
     const current = data.upgrades || [];
+    let updated: string[];
     if (current.includes(upgradeId)) {
-      onUpdate({ upgrades: current.filter((item) => item !== upgradeId) });
+      updated = current.filter((item) => item !== upgradeId);
     } else {
-      onUpdate({ upgrades: [...current, upgradeId] });
+      updated = [...current, upgradeId];
     }
+    onUpdate({ upgrades: updated, includeUpgrades: updated.length > 0 });
   };
 
   return (
     <div className="space-y-5">
       {/* Title */}
-      <h2 className="text-base font-bold text-slate-900 px-1">Tile Dry Area</h2>
+      <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">Tile Dry Area</h2>
 
       {/* Flooring Selection */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-xs font-bold text-slate-900">Flooring Selection</h3>
-            <p className="text-[11px] text-slate-400">Beaulieu Fresque Series - 100% Waterproof</p>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Flooring Selection</h3>
+            <p className="text-[11px] text-slate-400">Beaulieu Fresque Series - 100% Waterproof (Tap to select / deselect)</p>
           </div>
-          <Switch checked={data.includeFlooring} onCheckedChange={(c) => onUpdate({ includeFlooring: c })} />
         </div>
 
-        <div className={`space-y-3 transition-opacity ${!data.includeFlooring ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className="space-y-3">
           <div className="space-y-2 pt-1">
             {FLOORING_OPTIONS.map((item) => {
               const isSelected = data.flooringSelection === item.id;
               return (
                 <div
                   key={item.id}
-                  onClick={() => onUpdate({ flooringSelection: item.id })}
+                  onClick={() => toggleFlooring(item.id)}
                   className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${
                     isSelected
                       ? item.id === "No Flooring"
@@ -132,7 +183,7 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
                         item.id === "No Flooring" ? "bg-emerald-500 text-white" : "text-emerald-600 font-semibold"
                       }`}
                     >
-                      {item.id === "No Flooring" ? "Selected" : "Selected"}
+                      Selected
                     </span>
                   )}
                 </div>
@@ -157,18 +208,18 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
       {/* Toilet Selection */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
         <div className="flex justify-between items-center">
-          <h3 className="text-xs font-bold text-slate-900">Toilet Selection</h3>
-          <Switch checked={data.includeToilet} onCheckedChange={(c) => onUpdate({ includeToilet: c })} />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Toilet Selection</h3>
+          <p className="text-xs text-slate-400">Tap to select / deselect</p>
         </div>
 
-        <div className={`space-y-3 transition-opacity ${!data.includeToilet ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className="space-y-3">
           <div className="space-y-2">
             {TOILET_OPTIONS.map((item) => {
               const isSelected = data.toiletSelection === item.id;
               return (
                 <div
                   key={item.id}
-                  onClick={() => onUpdate({ toiletSelection: item.id })}
+                  onClick={() => toggleToilet(item.id)}
                   className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${
                     isSelected
                       ? item.id === "None"
@@ -212,40 +263,56 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-4">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-xs font-bold text-slate-900">Vanity Selection</h3>
-            <p className="text-[11px] text-slate-400">Painted Series - Wood Construction & Stone Top</p>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Vanity Selection</h3>
+            <p className="text-[11px] text-slate-400">Painted Series - Wood Construction & Stone Top (Tap to select / deselect)</p>
           </div>
-          <Switch checked={data.includeVanity} onCheckedChange={(c) => onUpdate({ includeVanity: c })} />
         </div>
 
-        <div className={`space-y-4 transition-opacity ${!data.includeVanity ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className="space-y-4">
           {/* Style */}
           <div className="space-y-2">
             <label className="block text-[11px] font-semibold text-slate-700">Style:</label>
             <div className="flex gap-2">
               {VANITY_STYLES.map((style) => {
-                const isSelected =
-                  data.vanityStyle === style || (style === "Custom" && !VANITY_STYLES.slice(0, 3).includes(data.vanityStyle));
+                const isCustom = style === "Custom";
+                const isSelected = isCustom
+                  ? data.vanityStyle === "Custom" || (Boolean(data.vanityStyle) && !["None", "Modern", "Traditional"].includes(data.vanityStyle))
+                  : data.vanityStyle === style;
+
                 return (
                   <button
                     key={style}
                     type="button"
                     onClick={() => {
-                      if (style === "Custom") {
-                        if (VANITY_STYLES.slice(0, 3).includes(data.vanityStyle)) {
-                          onUpdate({ vanityStyle: "" });
+                      if (isCustom) {
+                        if (isSelected) {
+                          onUpdate({ vanityStyle: "", includeVanity: false });
+                        } else {
+                          onUpdate({ vanityStyle: "Custom", includeVanity: true });
                         }
                       } else if (style === "None") {
-                        onUpdate({ vanityStyle: "None", vanitySize: "" });
+                        if (isSelected) {
+                          onUpdate({ vanityStyle: "", vanitySize: "", includeVanity: false });
+                        } else {
+                          onUpdate({ vanityStyle: "None", vanitySize: "", includeVanity: false });
+                        }
                       } else {
-                        onUpdate({ vanityStyle: style });
+                        if (isSelected) {
+                          onUpdate({ vanityStyle: "", includeVanity: false });
+                        } else {
+                          onUpdate({ vanityStyle: style, includeVanity: true });
+                        }
                       }
                     }}
                     className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
                       isSelected
-                        ? (style === "None" ? "bg-rose-500 text-white shadow-sm" : "bg-[#C4A47C] text-white shadow-sm")
-                        : style === "Custom"
-                        ? "border border-dashed border-slate-300 bg-amber-50/20 text-slate-700"
+                        ? style === "None"
+                          ? "bg-rose-500 text-white shadow-sm"
+                          : isCustom
+                          ? "bg-[#E8621A] text-white shadow-sm ring-1 ring-[#E8621A]"
+                          : "bg-[#C4A47C] text-white shadow-sm"
+                        : isCustom
+                        ? "border border-dashed border-slate-300 bg-amber-50/20 text-slate-700 hover:bg-slate-200"
                         : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                     }`}
                   >
@@ -256,47 +323,59 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
             </div>
 
             {/* Custom Style Input */}
-            {(!VANITY_STYLES.slice(0, 3).includes(data.vanityStyle)) && (
+            {(data.vanityStyle === "Custom" || (Boolean(data.vanityStyle) && !["None", "Modern", "Traditional"].includes(data.vanityStyle))) && (
               <div className="pt-1.5 space-y-1">
                 <label className="block text-[11px] font-semibold text-slate-700">Enter Custom Style:</label>
                 <input
                   type="text"
-                  value={data.vanityStyle}
-                  onChange={(e) => onUpdate({ vanityStyle: e.target.value })}
-                  placeholder="e.g. Mid-Century Modern, Rustic, etc."
+                  value={data.vanityStyle === "Custom" ? "" : data.vanityStyle}
+                  onChange={(e) => onUpdate({ vanityStyle: e.target.value || "Custom", includeVanity: true })}
+                  placeholder="e.g. Mid-Century Modern, Rustic, Floating, etc."
                   className="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
+                  autoFocus
                 />
               </div>
             )}
           </div>
 
           {/* Size */}
-          {data.vanityStyle !== "None" && (
+          {data.vanityStyle && data.vanityStyle !== "None" && (
             <div className="space-y-2">
               <label className="block text-[11px] font-semibold text-slate-700">Size:</label>
               <div className="flex flex-wrap gap-2">
                 {VANITY_SIZES.map((size) => {
-                  const standardSizes = VANITY_SIZES.slice(0, 8);
-                  const isSelected =
-                    data.vanitySize === size || (size === "Custom" && !standardSizes.includes(data.vanitySize));
+                  const isCustom = size === "Custom";
+                  const standardSizes = ['24"', '30"', '36"', '42"', '48"', '54"', '60"', '72"'];
+                  const isSelected = isCustom
+                    ? data.vanitySize === "Custom" || (Boolean(data.vanitySize) && !standardSizes.includes(data.vanitySize))
+                    : data.vanitySize === size;
+
                   return (
                     <button
                       key={size}
                       type="button"
                       onClick={() => {
-                        if (size === "Custom") {
-                          if (standardSizes.includes(data.vanitySize)) {
+                        if (isCustom) {
+                          if (isSelected) {
                             onUpdate({ vanitySize: "" });
+                          } else {
+                            onUpdate({ vanitySize: "Custom" });
                           }
                         } else {
-                          onUpdate({ vanitySize: size });
+                          if (isSelected) {
+                            onUpdate({ vanitySize: "" });
+                          } else {
+                            onUpdate({ vanitySize: size });
+                          }
                         }
                       }}
                       className={`rounded-xl px-3 py-2 text-xs font-medium transition-all ${
                         isSelected
-                          ? "bg-[#C4A47C] text-white shadow-sm"
-                          : size === "Custom"
-                          ? "border border-dashed border-slate-300 bg-amber-50/20 text-slate-700"
+                          ? isCustom
+                            ? "bg-[#E8621A] text-white shadow-sm ring-1 ring-[#E8621A]"
+                            : "bg-[#C4A47C] text-white shadow-sm"
+                          : isCustom
+                          ? "border border-dashed border-slate-300 bg-amber-50/20 text-slate-700 hover:bg-slate-200"
                           : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                       }`}
                     >
@@ -307,15 +386,16 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
               </div>
 
               {/* Custom Size Input */}
-              {(!VANITY_SIZES.slice(0, 8).includes(data.vanitySize)) && (
+              {(data.vanitySize === "Custom" || (Boolean(data.vanitySize) && !['24"', '30"', '36"', '42"', '48"', '54"', '60"', '72"'].includes(data.vanitySize))) && (
                 <div className="pt-1.5 space-y-1">
-                  <label className="block text-[11px] font-semibold text-slate-700">Enter Custom Size (inches):</label>
+                  <label className="block text-[11px] font-semibold text-slate-700">Enter Custom Size (inches or description):</label>
                   <input
                     type="text"
-                    value={data.vanitySize}
-                    onChange={(e) => onUpdate({ vanitySize: e.target.value })}
-                    placeholder="e.g. 27"
+                    value={data.vanitySize === "Custom" ? "" : data.vanitySize}
+                    onChange={(e) => onUpdate({ vanitySize: e.target.value || "Custom" })}
+                    placeholder="e.g. 27, 33.5, 84 double basin, etc."
                     className="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
+                    autoFocus
                   />
                 </div>
               )}
@@ -340,36 +420,29 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-3">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-xs font-bold text-slate-900">Mirror / Medicine Cabinet & Lighting Choice</h3>
-            <p className="text-[11px] text-slate-400">Select your mirror, lighting, and towel bar</p>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Mirror / Medicine Cabinet & Lighting Choice</h3>
+            <p className="text-[11px] text-slate-400">Select your mirror, lighting, and towel bar (Tap to select / deselect)</p>
           </div>
-          <Switch checked={data.includeMirrorLighting} onCheckedChange={(c) => onUpdate({ includeMirrorLighting: c })} />
         </div>
 
-        <div className={`space-y-6 transition-opacity ${!data.includeMirrorLighting ? 'opacity-40 pointer-events-none' : ''}`}>
-          
+        <div className="space-y-6">
           <div className="space-y-2 pt-1">
             <h4 className="text-[11px] font-semibold text-slate-700">Mirror / Cabinet:</h4>
             {MIRROR_OPTIONS.map((item) => {
-              const isSelected = data.mirrorChoice === item.id;
+              const selectedList = data.mirrorChoice ? data.mirrorChoice.split(", ").filter(Boolean) : [];
+              const isSelected = selectedList.includes(item.id);
               return (
                 <div
                   key={item.id}
-                  onClick={() => onUpdate({ mirrorChoice: item.id })}
+                  onClick={() => toggleMirrorChoice(item.id)}
                   className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${
                     isSelected
-                      ? item.id === "None"
-                        ? "border-rose-300 bg-rose-50/50"
-                        : "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                      ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
                       : "border-slate-200 bg-white hover:border-slate-300"
                   }`}
                 >
                   <div>
-                    <div
-                      className={`text-xs font-bold ${
-                        isSelected && item.id === "None" ? "text-rose-500" : "text-slate-900"
-                      }`}
-                    >
+                    <div className="text-xs font-bold text-slate-900">
                       {item.title}
                     </div>
                     {item.subtext && <div className="text-[11px] text-slate-400">{item.subtext}</div>}
@@ -391,25 +464,20 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
           <div className="space-y-2">
             <h4 className="text-[11px] font-semibold text-slate-700">Lighting Choice:</h4>
             {LIGHTING_OPTIONS.map((item) => {
-              const isSelected = data.lightingChoice === item.id;
+              const selectedList = data.lightingChoice ? data.lightingChoice.split(", ").filter(Boolean) : [];
+              const isSelected = selectedList.includes(item.id);
               return (
                 <div
                   key={item.id}
-                  onClick={() => onUpdate({ lightingChoice: item.id })}
+                  onClick={() => toggleLightingChoice(item.id)}
                   className={`cursor-pointer rounded-2xl border p-3.5 flex items-center justify-between transition-all ${
                     isSelected
-                      ? item.id === "None"
-                        ? "border-rose-300 bg-rose-50/50"
-                        : "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                      ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
                       : "border-slate-200 bg-white hover:border-slate-300"
                   }`}
                 >
                   <div>
-                    <div
-                      className={`text-xs font-bold ${
-                        isSelected && item.id === "None" ? "text-rose-500" : "text-slate-900"
-                      }`}
-                    >
+                    <div className="text-xs font-bold text-slate-900">
                       {item.title}
                     </div>
                   </div>
@@ -424,15 +492,16 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
             <h4 className="block text-[11px] font-semibold text-slate-700">Towel Bar Finish:</h4>
             <div className="flex gap-2">
               {TOWEL_BAR_FINISHES.map((finish) => {
-                const isSelected = data.towelBarFinish === finish;
+                const selectedList = data.towelBarFinish ? data.towelBarFinish.split(", ").filter(Boolean) : [];
+                const isSelected = selectedList.includes(finish);
                 return (
                   <button
                     key={finish}
                     type="button"
-                    onClick={() => onUpdate({ towelBarFinish: finish })}
+                    onClick={() => toggleTowelBarFinish(finish)}
                     className={`rounded-xl px-5 py-2 text-xs font-semibold transition-all ${
                       isSelected 
-                        ? (finish === "None" ? "bg-rose-500 text-white shadow-sm" : "bg-[#C4A47C] text-white shadow-sm")
+                        ? "bg-[#C4A47C] text-white shadow-sm"
                         : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                     }`}
                   >
@@ -461,18 +530,23 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
       {/* Upgrades */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-base font-bold text-slate-900">Upgrades</h3>
-          <Switch checked={data.includeUpgrades} onCheckedChange={(c) => onUpdate({ includeUpgrades: c })} />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Upgrades</h3>
+          <p className="text-xs text-slate-400">Tap to select / deselect</p>
         </div>
 
-        <div className={`space-y-4 transition-opacity ${!data.includeUpgrades ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className="space-y-4">
           <div className="space-y-3">
             {DRY_UPGRADES_OPTIONS.map((item) => {
               const isChecked = (data.upgrades || []).includes(item.id);
               return (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/40 p-3.5"
+                  onClick={() => toggleUpgrade(item.id)}
+                  className={`cursor-pointer flex items-center justify-between rounded-2xl border p-3.5 transition-all ${
+                    isChecked
+                      ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
                 >
                   <div className="space-y-0.5">
                     <div className="text-xs font-bold text-slate-900">{item.title}</div>
@@ -500,12 +574,12 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
 
       {/* Notes */}
       <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 space-y-2">
-        <h3 className="text-base font-bold text-slate-900">Notes</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Tiled Dry Area Notes</h3>
         <textarea
           rows={3}
           value={data.notes}
           onChange={(e) => onUpdate({ notes: e.target.value })}
-          placeholder="Enter notes about this tile dry area..."
+          placeholder="Enter overall notes about this tile dry area..."
           className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#E8621A] focus:outline-none"
         />
       </div>

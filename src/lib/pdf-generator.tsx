@@ -115,52 +115,54 @@ export function AssessmentPDFDocument({ data, logoBase64 }: { data: PDFData; log
           <View style={styles.row}>
             <Text style={styles.label}>Measurements / Sizes:</Text>
             <Text style={styles.value}>
-              {data.existingBathroom.measurements || "N/A"} (Bath: {data.existingBathroom.bathSize || "-"} · Shower: {data.existingBathroom.showerSize || "-"})
+              {data.existingBathroom.measurements || "None"} (Bath: {data.existingBathroom.bathSize || "None"} · Shower: {data.existingBathroom.showerSize || "None"})
             </Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Wall Material:</Text>
-            <Text style={styles.value}>{data.existingBathroom.wallMaterial || "N/A"}</Text>
+            <Text style={styles.value}>{data.existingBathroom.wallMaterial || "None"}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Flooring:</Text>
             <Text style={styles.value}>
-              {data.existingBathroom.flooringSquareFt ? `${data.existingBathroom.flooringSquareFt} sq ft` : ""} {data.existingBathroom.flooringMaterial ? `(${data.existingBathroom.flooringMaterial})` : ""}
+              {data.existingBathroom.flooringSquareFt ? `${data.existingBathroom.flooringSquareFt} sq ft` : "None"} {data.existingBathroom.flooringMaterial ? `(${data.existingBathroom.flooringMaterial})` : ""}
             </Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Vanity Size:</Text>
-            <Text style={styles.value}>{data.existingBathroom.vanitySize || "N/A"}</Text>
+            <Text style={styles.value}>{data.existingBathroom.vanitySize || "None"}</Text>
           </View>
+          {data.existingBathroom.notes && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Notes:</Text>
+              <Text style={styles.value}>{data.existingBathroom.notes}</Text>
+            </View>
+          )}
         </View>
 
-        {/* Wet Area Package */}
+        {/* Wet Area Package (Acrylic) */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Wet Area Package (Acrylic)</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Bath Package:</Text>
             <Text style={styles.value}>
-              {data.wetArea.includeBath ? `Included - ${data.wetArea.bathDetails || "Standard"}` : "No"}
+              {data.wetArea.bathDetails ? `Included - ${data.wetArea.bathDetails}` : data.wetArea.includeBath ? "Included" : "None"}
             </Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Shower Package:</Text>
             <Text style={styles.value}>
-              {data.wetArea.includeShower ? `Included - ${data.wetArea.showerDetails || "Standard"}` : "No"}
+              {data.wetArea.showerDetails ? `Included - ${data.wetArea.showerDetails}` : data.wetArea.includeShower ? "Included" : "None"}
             </Text>
           </View>
-          {data.upgrades.includeGlassDoor !== false && (
-            <View style={styles.row}>
-              <Text style={styles.label}>Glass Door:</Text>
-              <Text style={styles.value}>{data.upgrades.glassDoor || "N/A"}</Text>
-            </View>
-          )}
-          {data.wetArea.includeAcrylicTilePanel !== false && (
-            <View style={styles.row}>
-              <Text style={styles.label}>Acrylic Tile Panel System:</Text>
-              <Text style={styles.value}>{data.wetArea.acrylicTilePanel || "N/A"}</Text>
-            </View>
-          )}
+          <View style={styles.row}>
+            <Text style={styles.label}>Glass Door:</Text>
+            <Text style={styles.value}>{data.upgrades.glassDoor || "None"}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Acrylic Tile Panel System:</Text>
+            <Text style={styles.value}>{data.wetArea.acrylicTilePanel || "None"}</Text>
+          </View>
           <View style={styles.row}>
             <Text style={styles.label}>Package Upgrades:</Text>
             <Text style={styles.value}>
@@ -171,132 +173,182 @@ export function AssessmentPDFDocument({ data, logoBase64 }: { data: PDFData; log
                   : "None"}
             </Text>
           </View>
+          {data.wetArea.notes && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Notes:</Text>
+              <Text style={styles.value}>{data.wetArea.notes}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Dry Area Package (Acrylic) - Reordered directly above Tiled Wet Area */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Dry Area Package (Acrylic)</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Package Selection:</Text>
+            <Text style={styles.value}>{data.dryArea.package || "None"}</Text>
+          </View>
+          {data.dryArea.packageNotes && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Package Notes:</Text>
+              <Text style={styles.value}>{data.dryArea.packageNotes}</Text>
+            </View>
+          )}
+          <View style={styles.row}>
+            <Text style={styles.label}>Vanity Style & Details:</Text>
+            <Text style={styles.value}>
+              {data.dryArea.vanityStyle || "None"} {data.dryArea.vanityDetails ? `(${data.dryArea.vanityDetails})` : ""}
+            </Text>
+          </View>
+          {data.dryArea.vanityNotes && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Vanity Notes:</Text>
+              <Text style={styles.value}>{data.dryArea.vanityNotes}</Text>
+            </View>
+          )}
+          <View style={styles.row}>
+            <Text style={styles.label}>Mirror / Lighting:</Text>
+            <Text style={styles.value}>
+              Mirror: {data.dryArea.mirror || "None"} · Vanity Light: {data.dryArea.vanityLighting || "None"} · Upgrade Light: {data.dryArea.upgradeLighting || "None"}
+            </Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Towel Bars:</Text>
+            <Text style={styles.value}>{data.dryArea.towelBars || "None"}</Text>
+          </View>
+          {data.dryArea.mirrorLightingNotes && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Mirror & Light Notes:</Text>
+              <Text style={styles.value}>{data.dryArea.mirrorLightingNotes}</Text>
+            </View>
+          )}
+          {data.dryArea.comments && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Additional Comments:</Text>
+              <Text style={styles.value}>{data.dryArea.comments}</Text>
+            </View>
+          )}
         </View>
 
         {/* Tiled Wet Area Section */}
         {data.tiledWetArea && (
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Tiled Wet Area</Text>
-            {data.tiledWetArea.includeBathOrShower !== false && (
-              <>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Bath or Shower:</Text>
-                  <Text style={styles.value}>{data.tiledWetArea.bathOrShower || "N/A"}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Wet Area Size:</Text>
-                  <Text style={styles.value}>{data.tiledWetArea.wetAreaSize || "N/A"}</Text>
-                </View>
-              </>
-            )}
-            {data.tiledWetArea.includeUpgrades !== false && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Bath or Shower:</Text>
+              <Text style={styles.value}>{data.tiledWetArea.bathOrShower || "None"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Wet Area Size:</Text>
+              <Text style={styles.value}>{data.tiledWetArea.wetAreaSize || "None"}</Text>
+            </View>
+            {data.tiledWetArea.bathOrShowerNotes && (
               <View style={styles.row}>
-                <Text style={styles.label}>Upgrades:</Text>
-                <Text style={styles.value}>
-                  {Array.isArray(data.tiledWetArea.upgrades) && data.tiledWetArea.upgrades.length > 0
-                    ? data.tiledWetArea.upgrades.join(", ")
-                    : "None"}
-                </Text>
+                <Text style={styles.label}>Bath/Shower Notes:</Text>
+                <Text style={styles.value}>{data.tiledWetArea.bathOrShowerNotes}</Text>
               </View>
             )}
             <View style={styles.row}>
-              <Text style={styles.label}>Notes:</Text>
-              <Text style={styles.value}>{data.tiledWetArea.notes || "N/A"}</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Dry Area Package */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Dry Area Package (Acrylic)</Text>
-          {data.dryArea.includePackage !== false && (
-            <View style={styles.row}>
-              <Text style={styles.label}>Package Selection:</Text>
-              <Text style={styles.value}>{data.dryArea.package || "N/A"}</Text>
-            </View>
-          )}
-          {data.dryArea.includeVanity !== false && (
-            <View style={styles.row}>
-              <Text style={styles.label}>Vanity Style & Details:</Text>
+              <Text style={styles.label}>Upgrades:</Text>
               <Text style={styles.value}>
-                {data.dryArea.vanityStyle || "N/A"} {data.dryArea.vanityDetails ? `(${data.dryArea.vanityDetails})` : ""}
+                {Array.isArray(data.tiledWetArea.upgrades) && data.tiledWetArea.upgrades.length > 0
+                  ? data.tiledWetArea.upgrades.join(", ")
+                  : "None"}
               </Text>
             </View>
-          )}
-          {data.dryArea.includeMirrorLighting !== false && (
-            <>
+            {data.tiledWetArea.upgradesNotes && (
               <View style={styles.row}>
-                <Text style={styles.label}>Mirror / Lighting:</Text>
-                <Text style={styles.value}>
-                  Mirror: {data.dryArea.mirror || "N/A"} · Vanity Light: {data.dryArea.vanityLighting || "N/A"} · Upgrade Light: {data.dryArea.upgradeLighting || "N/A"}
-                </Text>
+                <Text style={styles.label}>Upgrades Notes:</Text>
+                <Text style={styles.value}>{data.tiledWetArea.upgradesNotes}</Text>
               </View>
+            )}
+            {data.tiledWetArea.notes && (
               <View style={styles.row}>
-                <Text style={styles.label}>Towel Bars:</Text>
-                <Text style={styles.value}>{data.dryArea.towelBars || "N/A"}</Text>
+                <Text style={styles.label}>Notes:</Text>
+                <Text style={styles.value}>{data.tiledWetArea.notes}</Text>
               </View>
-            </>
-          )}
-        </View>
+            )}
+          </View>
+        )}
 
         {/* Tiled Dry Area Section */}
         {data.tiledDryArea && (
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Tiled Dry Area</Text>
-            {data.tiledDryArea.includeFlooring !== false && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Flooring Selection:</Text>
+              <Text style={styles.value}>
+                {data.tiledDryArea.flooringSelection || "None"}
+              </Text>
+            </View>
+            {data.tiledDryArea.flooringNotes && (
               <View style={styles.row}>
-                <Text style={styles.label}>Flooring Selection:</Text>
-                <Text style={styles.value}>
-                  {data.tiledDryArea.flooringSelection || "N/A"} {data.tiledDryArea.flooringNotes ? `(${data.tiledDryArea.flooringNotes})` : ""}
-                </Text>
-              </View>
-            )}
-            {data.tiledDryArea.includeToilet !== false && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Toilet Selection:</Text>
-                <Text style={styles.value}>{data.tiledDryArea.toiletSelection || "N/A"}</Text>
-              </View>
-            )}
-            {data.tiledDryArea.includeVanity !== false && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Vanity Selection:</Text>
-                <Text style={styles.value}>
-                  {data.tiledDryArea.vanityStyle === "None"
-                    ? "None"
-                    : `Style: ${data.tiledDryArea.vanityStyle || "N/A"}${data.tiledDryArea.vanitySize ? ` · Size: ${data.tiledDryArea.vanitySize}` : ""}`}
-                </Text>
-              </View>
-            )}
-            {data.tiledDryArea.includeMirrorLighting !== false && (
-              <>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Mirror Choice:</Text>
-                  <Text style={styles.value}>{data.tiledDryArea.mirrorChoice || "N/A"}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Lighting Choice:</Text>
-                  <Text style={styles.value}>{data.tiledDryArea.lightingChoice || "N/A"}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Towel Bar Finish:</Text>
-                  <Text style={styles.value}>{data.tiledDryArea.towelBarFinish || "N/A"}</Text>
-                </View>
-              </>
-            )}
-            {data.tiledDryArea.includeUpgrades !== false && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Upgrades:</Text>
-                <Text style={styles.value}>
-                  {Array.isArray(data.tiledDryArea.upgrades) && data.tiledDryArea.upgrades.length > 0
-                    ? data.tiledDryArea.upgrades.join(", ")
-                    : "None"}
-                </Text>
+                <Text style={styles.label}>Flooring Notes:</Text>
+                <Text style={styles.value}>{data.tiledDryArea.flooringNotes}</Text>
               </View>
             )}
             <View style={styles.row}>
-              <Text style={styles.label}>Notes:</Text>
-              <Text style={styles.value}>{data.tiledDryArea.notes || "N/A"}</Text>
+              <Text style={styles.label}>Toilet Selection:</Text>
+              <Text style={styles.value}>{data.tiledDryArea.toiletSelection || "None"}</Text>
             </View>
+            {data.tiledDryArea.toiletNotes && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Toilet Notes:</Text>
+                <Text style={styles.value}>{data.tiledDryArea.toiletNotes}</Text>
+              </View>
+            )}
+            <View style={styles.row}>
+              <Text style={styles.label}>Vanity Selection:</Text>
+              <Text style={styles.value}>
+                {!data.tiledDryArea.vanityStyle || data.tiledDryArea.vanityStyle === "None"
+                  ? "None"
+                  : `Style: ${data.tiledDryArea.vanityStyle}${data.tiledDryArea.vanitySize ? ` · Size: ${data.tiledDryArea.vanitySize}` : ""}`}
+              </Text>
+            </View>
+            {data.tiledDryArea.vanityNotes && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Vanity Notes:</Text>
+                <Text style={styles.value}>{data.tiledDryArea.vanityNotes}</Text>
+              </View>
+            )}
+            <View style={styles.row}>
+              <Text style={styles.label}>Mirror Choice:</Text>
+              <Text style={styles.value}>{data.tiledDryArea.mirrorChoice || "None"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Lighting Choice:</Text>
+              <Text style={styles.value}>{data.tiledDryArea.lightingChoice || "None"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Towel Bar Finish:</Text>
+              <Text style={styles.value}>{data.tiledDryArea.towelBarFinish || "None"}</Text>
+            </View>
+            {data.tiledDryArea.mirrorLightingNotes && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Mirror/Light Notes:</Text>
+                <Text style={styles.value}>{data.tiledDryArea.mirrorLightingNotes}</Text>
+              </View>
+            )}
+            <View style={styles.row}>
+              <Text style={styles.label}>Upgrades:</Text>
+              <Text style={styles.value}>
+                {Array.isArray(data.tiledDryArea.upgrades) && data.tiledDryArea.upgrades.length > 0
+                  ? data.tiledDryArea.upgrades.join(", ")
+                  : "None"}
+              </Text>
+            </View>
+            {data.tiledDryArea.upgradesNotes && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Upgrades Notes:</Text>
+                <Text style={styles.value}>{data.tiledDryArea.upgradesNotes}</Text>
+              </View>
+            )}
+            {data.tiledDryArea.notes && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Notes:</Text>
+                <Text style={styles.value}>{data.tiledDryArea.notes}</Text>
+              </View>
+            )}
           </View>
         )}
 

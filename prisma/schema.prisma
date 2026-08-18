@@ -90,50 +90,66 @@ type ExistingBathroom {
 }
 
 type WetArea {
-  includeBath             Boolean @default(false)
+  includeBath             Boolean? @default(false)
   bathDetails             String?
-  includeShower           Boolean @default(false)
+  includeShower           Boolean? @default(false)
   showerDetails           String?
-  includeAcrylicTilePanel Boolean @default(true)
+  includeAcrylicTilePanel Boolean? @default(true)
   acrylicTilePanel        String?
   notes                   String?
 }
 
 type DryArea {
-  package         String?
-  vanityStyle     String?
-  vanityDetails   String?
-  packageUpgrades String[]
-  mirror          String?
-  vanityLighting  String?
-  upgradeLighting String?
-  towelBars       String?
-  comments        String?
+  package             String?
+  packageNotes        String?
+  vanityStyle         String?
+  vanityDetails       String?
+  vanityNotes         String?
+  packageUpgrades     String[]
+  mirror              String?
+  vanityLighting      String?
+  upgradeLighting     String?
+  towelBars           String?
+  mirrorLightingNotes String?
+  comments            String?
 }
 
 type Upgrades {
-  includeGlassDoor Boolean @default(true)
+  includeGlassDoor Boolean? @default(true)
   glassDoor        String?
 }
 
 type TiledWetArea {
-  bathOrShower String?
-  wetAreaSize  String?
-  upgrades     String[]
-  notes        String?
+  includeBathOrShower Boolean? @default(true)
+  bathOrShower        String?
+  wetAreaSize         String?
+  bathOrShowerNotes   String?
+  includeUpgrades     Boolean? @default(true)
+  upgrades            String[]
+  upgradesNotes       String?
+  notes               String?
 }
 
 type TiledDryArea {
-  flooringSelection String?
-  flooringNotes     String?
-  toiletSelection   String?
-  vanityStyle       String?
-  vanitySize        String?
-  mirrorChoice      String?
-  lightingChoice    String?
-  towelBarFinish    String?
-  upgrades          String[]
-  notes             String?
+  includeFlooring     Boolean? @default(true)
+  flooringSelection   String?
+  flooringNotes       String?
+  includeToilet       Boolean? @default(true)
+  toiletSelection     String?
+  toiletNotes         String?
+  includeVanity       Boolean? @default(true)
+  vanityStyle         String?
+  vanitySize          String?
+  vanityNotes         String?
+  includeMirrorLighting Boolean? @default(true)
+  mirrorChoice        String?
+  lightingChoice      String?
+  towelBarFinish      String?
+  mirrorLightingNotes String?
+  includeUpgrades     Boolean? @default(true)
+  upgrades            String[]
+  upgradesNotes       String?
+  notes               String?
 }
 
 model Assessment {

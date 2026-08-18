@@ -1,10 +1,22 @@
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 export async function getCurrentUser() {
   const session = await auth();
-  return session?.user;
+  if (!session?.user?.id) return null;
+
+  // Verify the user actually exists in the active database
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+  });
+
+  if (!user || user.status === "SUSPENDED") {
+    return null;
+  }
+
+  return session.user;
 }
 
 export async function requireUser() {
