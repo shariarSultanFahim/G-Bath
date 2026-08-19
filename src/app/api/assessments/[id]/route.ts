@@ -58,7 +58,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     if (tiledWetArea) {
       dataPayload.tiledWetArea = {
-        bathOrShower: tiledWetArea.bathOrShower || undefined,
+        bathOrShower: Array.isArray(tiledWetArea.bathOrShower) ? tiledWetArea.bathOrShower : [],
         wetAreaSize: tiledWetArea.wetAreaSize || undefined,
         bathOrShowerNotes: tiledWetArea.bathOrShowerNotes || undefined,
         upgrades: Array.isArray(tiledWetArea.upgrades) ? tiledWetArea.upgrades : [],
@@ -86,7 +86,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     if (tiledDryArea) {
       dataPayload.tiledDryArea = {
-        flooringSelection: tiledDryArea.flooringSelection || undefined,
+        flooringSelection: Array.isArray(tiledDryArea.flooringSelection) ? tiledDryArea.flooringSelection : [],
         flooringNotes: tiledDryArea.flooringNotes || undefined,
         toiletSelection: tiledDryArea.toiletSelection || undefined,
         toiletNotes: tiledDryArea.toiletNotes || undefined,

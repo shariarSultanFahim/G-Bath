@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 
 export interface StepTiledDryAreaData {
   includeFlooring: boolean;
-  flooringSelection: string;
+  flooringSelection: string[];
   flooringNotes: string;
   includeToilet: boolean;
   toiletSelection: string;
@@ -33,9 +33,10 @@ interface Props {
 
 const FLOORING_OPTIONS = [
   { id: "No Flooring", title: "No Flooring", subtext: "Skip flooring installation" },
-  { id: "Premium Vinyl Tile (PVT)", title: "Premium Vinyl Tile (PVT)", subtext: "12\" x 24\" • Tile Look • 5 Colors" },
-  { id: "Plank Style Flooring", title: "Plank Style Flooring", subtext: "6\" x 48\" • Wood Look • 8 Finishes" },
-  { id: "Luxury Vinyl Plank (LVP)", title: "Luxury Vinyl Plank (LVP)", subtext: "7\" x 48\" • Premium • 12 Finishes" },
+  { id: "Tile floor", title: "Tile floor", subtext: "" },
+  { id: "Tile base", title: "Tile base", subtext: "" },
+  { id: "Wood base", title: "Wood base", subtext: "" },
+  { id: "Wall tile", title: "Wall tile", subtext: "" },
 ];
 
 const TOILET_OPTIONS = [
@@ -74,12 +75,32 @@ const DRY_UPGRADES_OPTIONS = [
 ];
 
 export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
+  /**
+   * Multi-select flooring with "No Flooring" mutual exclusion:
+   * - Selecting "No Flooring" clears all other selections
+   * - Selecting any other option removes "No Flooring"
+   */
   const toggleFlooring = (id: string) => {
-    if (data.flooringSelection === id) {
-      onUpdate({ flooringSelection: "", includeFlooring: false });
-    } else {
-      onUpdate({ flooringSelection: id, includeFlooring: true });
+    const current = data.flooringSelection || [];
+
+    if (id === "No Flooring") {
+      if (current.includes("No Flooring")) {
+        onUpdate({ flooringSelection: [], includeFlooring: false });
+      } else {
+        onUpdate({ flooringSelection: ["No Flooring"], includeFlooring: false });
+      }
+      return;
     }
+
+    // Selecting a real option — remove "No Flooring" if present, then toggle the item
+    const withoutNoFlooring = current.filter((item) => item !== "No Flooring");
+    let updated: string[];
+    if (withoutNoFlooring.includes(id)) {
+      updated = withoutNoFlooring.filter((item) => item !== id);
+    } else {
+      updated = [...withoutNoFlooring, id];
+    }
+    onUpdate({ flooringSelection: updated, includeFlooring: updated.length > 0 });
   };
 
   const toggleToilet = (id: string) => {
@@ -147,14 +168,14 @@ export function StepTiledDryArea({ data, onUpdate, onNext, onPrev }: Props) {
         <div className="flex justify-between items-center">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Flooring Selection</h3>
-            <p className="text-[11px] text-slate-400">Beaulieu Fresque Series - 100% Waterproof (Tap to select / deselect)</p>
+            <p className="text-[11px] text-slate-400">Tap to select / deselect (multiple allowed)</p>
           </div>
         </div>
 
         <div className="space-y-3">
           <div className="space-y-2 pt-1">
             {FLOORING_OPTIONS.map((item) => {
-              const isSelected = data.flooringSelection === item.id;
+              const isSelected = (data.flooringSelection || []).includes(item.id);
               return (
                 <div
                   key={item.id}

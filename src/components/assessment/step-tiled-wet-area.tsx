@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 
 export interface StepTiledWetAreaData {
   includeBathOrShower: boolean;
-  bathOrShower: string; // "Bath" | "Shower" | ""
+  bathOrShower: string[];
   wetAreaSize: string;
   bathOrShowerNotes: string;
   includeUpgrades: boolean;
@@ -54,12 +54,16 @@ const WET_UPGRADES_OPTIONS = [
 ];
 
 export function StepTiledWetArea({ data, onUpdate, onNext, onPrev }: Props) {
-  const handleSelectType = (type: string) => {
-    if (data.bathOrShower === type) {
-      onUpdate({ bathOrShower: "", includeBathOrShower: false });
+  /** Independent toggle — each type can be added/removed without affecting the other */
+  const handleToggleType = (type: string) => {
+    const current = data.bathOrShower || [];
+    let updated: string[];
+    if (current.includes(type)) {
+      updated = current.filter((t) => t !== type);
     } else {
-      onUpdate({ bathOrShower: type, includeBathOrShower: true });
+      updated = [...current, type];
     }
+    onUpdate({ bathOrShower: updated, includeBathOrShower: updated.length > 0 });
   };
 
   const toggleUpgrade = (upgradeId: string) => {
@@ -72,6 +76,9 @@ export function StepTiledWetArea({ data, onUpdate, onNext, onPrev }: Props) {
     }
     onUpdate({ upgrades: updated, includeUpgrades: updated.length > 0 });
   };
+
+  const bathSelected = (data.bathOrShower || []).includes("Bath");
+  const showerSelected = (data.bathOrShower || []).includes("Shower");
 
   return (
     <div className="space-y-5">
@@ -86,37 +93,37 @@ export function StepTiledWetArea({ data, onUpdate, onNext, onPrev }: Props) {
           {/* Bath or Shower? */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-900">Bath or Shower?</label>
-            <p className="text-xs text-slate-400">Select the type (tap again to unselect)</p>
+            <p className="text-xs text-slate-400">Select one or both (tap again to unselect)</p>
 
             <div className="grid grid-cols-2 gap-3 pt-1">
               {/* Bath Card */}
               <div
-                onClick={() => handleSelectType("Bath")}
+                onClick={() => handleToggleType("Bath")}
                 className={`cursor-pointer rounded-2xl border p-4 text-center transition-all ${
-                  data.bathOrShower === "Bath"
+                  bathSelected
                     ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
                     : "border-slate-200 bg-white hover:border-slate-300"
                 }`}
               >
                 <div className="font-bold text-sm text-slate-900">Bath</div>
                 <div className="text-[11px] text-slate-400">Freestanding or Built-in</div>
-                {data.bathOrShower === "Bath" && (
+                {bathSelected && (
                   <div className="mt-1 text-[11px] font-semibold text-emerald-600">Selected</div>
                 )}
               </div>
 
               {/* Shower Card */}
               <div
-                onClick={() => handleSelectType("Shower")}
+                onClick={() => handleToggleType("Shower")}
                 className={`cursor-pointer rounded-2xl border p-4 text-center transition-all ${
-                  data.bathOrShower === "Shower"
+                  showerSelected
                     ? "border-[#D4AF37] bg-amber-50/40 ring-1 ring-[#D4AF37]/50"
                     : "border-slate-200 bg-white hover:border-slate-300"
                 }`}
               >
                 <div className="font-bold text-sm text-slate-900">Shower</div>
                 <div className="text-[11px] text-slate-400">Walk-in or Enclosed</div>
-                {data.bathOrShower === "Shower" && (
+                {showerSelected && (
                   <div className="mt-1 text-[11px] font-semibold text-emerald-600">Selected</div>
                 )}
               </div>

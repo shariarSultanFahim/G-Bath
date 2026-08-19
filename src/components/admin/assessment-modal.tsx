@@ -40,7 +40,14 @@ export function AssessmentModal({ isOpen, onClose, onSuccess, initialData }: Pro
   useEffect(() => {
     if (initialData && isOpen) {
       setStatus(initialData.status || "SUBMITTED");
-      setPdfUrl(initialData.pdfUrl || "");
+      // Resolve relative PDF paths to full URLs using the site base URL
+      const rawPdf = initialData.pdfUrl || "";
+      if (rawPdf && rawPdf.startsWith("/")) {
+        const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/+$/, "");
+        setPdfUrl(`${baseUrl}${rawPdf}`);
+      } else {
+        setPdfUrl(rawPdf);
+      }
     } else if (isOpen && !initialData) {
       setStatus("SUBMITTED");
       setPdfUrl("");

@@ -121,7 +121,7 @@ type Upgrades {
 
 type TiledWetArea {
   includeBathOrShower Boolean? @default(true)
-  bathOrShower        String?
+  bathOrShower        String[]
   wetAreaSize         String?
   bathOrShowerNotes   String?
   includeUpgrades     Boolean? @default(true)
@@ -132,7 +132,7 @@ type TiledWetArea {
 
 type TiledDryArea {
   includeFlooring     Boolean? @default(true)
-  flooringSelection   String?
+  flooringSelection   String[]
   flooringNotes       String?
   includeToilet       Boolean? @default(true)
   toiletSelection     String?

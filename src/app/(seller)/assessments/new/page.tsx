@@ -52,7 +52,7 @@ export default function NewAssessmentPage() {
 
   const [stepTiledWet, setStepTiledWet] = useState<StepTiledWetAreaData>({
     includeBathOrShower: true,
-    bathOrShower: "Bath",
+    bathOrShower: ["Bath"],
     wetAreaSize: "",
     bathOrShowerNotes: "",
     includeUpgrades: true,
@@ -81,7 +81,7 @@ export default function NewAssessmentPage() {
 
   const [stepTiledDry, setStepTiledDry] = useState<StepTiledDryAreaData>({
     includeFlooring: true,
-    flooringSelection: "No Flooring",
+    flooringSelection: ["No Flooring"],
     flooringNotes: "",
     includeToilet: true,
     toiletSelection: "Standard Concealed Trapway",

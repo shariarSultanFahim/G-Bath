@@ -143,7 +143,7 @@ export function Step5Review({
           </button>
         </div>
         <div className="space-y-2 text-xs">
-          <div className="flex justify-between"><span className="text-slate-500">Type</span><span className="font-semibold">{stepTiledWet.bathOrShower || "None"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Type</span><span className="font-semibold">{stepTiledWet.bathOrShower?.length ? stepTiledWet.bathOrShower.join(", ") : "None"}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">Size</span><span className="font-semibold">{stepTiledWet.wetAreaSize || "None"}</span></div>
           {stepTiledWet.bathOrShowerNotes && (
             <div className="flex justify-between"><span className="text-slate-500">Bath/Shower Notes</span><span className="font-semibold">{stepTiledWet.bathOrShowerNotes}</span></div>
@@ -165,7 +165,7 @@ export function Step5Review({
           </button>
         </div>
         <div className="space-y-2 text-xs">
-          <div className="flex justify-between"><span className="text-slate-500">Flooring</span><span className="font-semibold">{stepTiledDry.flooringSelection || "None"}</span></div>
+          <div className="flex justify-between"><span className="text-slate-500">Flooring</span><span className="font-semibold">{stepTiledDry.flooringSelection?.length ? stepTiledDry.flooringSelection.join(", ") : "None"}</span></div>
           {stepTiledDry.flooringNotes && (
             <div className="flex justify-between"><span className="text-slate-500">Flooring Notes</span><span className="font-semibold">{stepTiledDry.flooringNotes}</span></div>
           )}

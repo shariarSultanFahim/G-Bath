@@ -236,7 +236,11 @@ export function AssessmentPDFDocument({ data, logoBase64 }: { data: PDFData; log
             <Text style={styles.sectionHeader}>Tiled Wet Area</Text>
             <View style={styles.row}>
               <Text style={styles.label}>Bath or Shower:</Text>
-              <Text style={styles.value}>{data.tiledWetArea.bathOrShower || "None"}</Text>
+              <Text style={styles.value}>
+                {Array.isArray(data.tiledWetArea.bathOrShower) && data.tiledWetArea.bathOrShower.length > 0
+                  ? data.tiledWetArea.bathOrShower.join(", ")
+                  : "None"}
+              </Text>
             </View>
             <View style={styles.row}>
               <Text style={styles.label}>Wet Area Size:</Text>
@@ -278,7 +282,9 @@ export function AssessmentPDFDocument({ data, logoBase64 }: { data: PDFData; log
             <View style={styles.row}>
               <Text style={styles.label}>Flooring Selection:</Text>
               <Text style={styles.value}>
-                {data.tiledDryArea.flooringSelection || "None"}
+                {Array.isArray(data.tiledDryArea.flooringSelection) && data.tiledDryArea.flooringSelection.length > 0
+                  ? data.tiledDryArea.flooringSelection.join(", ")
+                  : "None"}
               </Text>
             </View>
             {data.tiledDryArea.flooringNotes && (

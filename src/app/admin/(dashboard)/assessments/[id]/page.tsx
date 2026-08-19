@@ -193,7 +193,7 @@ export default function AdminAssessmentDetailPage({ params }: { params: Promise<
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 grid grid-cols-2 gap-y-3 gap-x-6 text-xs">
-              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">TYPE</span><span className="font-semibold text-foreground">{tiledWet.bathOrShower || "None"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">TYPE</span><span className="font-semibold text-foreground">{Array.isArray(tiledWet.bathOrShower) && tiledWet.bathOrShower.length ? tiledWet.bathOrShower.join(", ") : "None"}</span></div>
               <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">WET AREA SIZE</span><span className="font-semibold text-foreground">{tiledWet.wetAreaSize || "None"}</span></div>
               <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">BATH/SHOWER NOTES</span><span className="font-semibold text-foreground">{tiledWet.bathOrShowerNotes || "None"}</span></div>
               <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">UPGRADES</span><span className="font-semibold text-foreground">{tiledWet.upgrades?.length ? tiledWet.upgrades.join(", ") : "None"}</span></div>
@@ -210,7 +210,7 @@ export default function AdminAssessmentDetailPage({ params }: { params: Promise<
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 grid grid-cols-2 gap-y-3 gap-x-6 text-xs">
-              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">FLOORING SELECTION</span><span className="font-semibold text-foreground">{tiledDry.flooringSelection || "None"}</span></div>
+              <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">FLOORING SELECTION</span><span className="font-semibold text-foreground">{Array.isArray(tiledDry.flooringSelection) && tiledDry.flooringSelection.length ? tiledDry.flooringSelection.join(", ") : "None"}</span></div>
               <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">FLOORING NOTES</span><span className="font-semibold text-foreground">{tiledDry.flooringNotes || "None"}</span></div>
               <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">TOILET SELECTION</span><span className="font-semibold text-foreground">{tiledDry.toiletSelection || "None"}</span></div>
               <div><span className="text-muted-foreground block text-[10px] uppercase font-bold">TOILET NOTES</span><span className="font-semibold text-foreground">{tiledDry.toiletNotes || "None"}</span></div>

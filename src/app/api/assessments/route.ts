@@ -103,7 +103,7 @@ export async function POST(req: Request) {
 
     const cleanTiledWetArea = tiledWetArea
       ? {
-          bathOrShower: tiledWetArea.bathOrShower || undefined,
+          bathOrShower: Array.isArray(tiledWetArea.bathOrShower) ? tiledWetArea.bathOrShower : [],
           wetAreaSize: tiledWetArea.wetAreaSize || undefined,
           bathOrShowerNotes: tiledWetArea.bathOrShowerNotes || undefined,
           upgrades: Array.isArray(tiledWetArea.upgrades) ? tiledWetArea.upgrades : [],
@@ -131,7 +131,7 @@ export async function POST(req: Request) {
 
     const cleanTiledDryArea = tiledDryArea
       ? {
-          flooringSelection: tiledDryArea.flooringSelection || undefined,
+          flooringSelection: Array.isArray(tiledDryArea.flooringSelection) ? tiledDryArea.flooringSelection : [],
           flooringNotes: tiledDryArea.flooringNotes || undefined,
           toiletSelection: tiledDryArea.toiletSelection || undefined,
           toiletNotes: tiledDryArea.toiletNotes || undefined,
